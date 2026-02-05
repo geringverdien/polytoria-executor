@@ -178,6 +178,7 @@ DWORD WINAPI MainThread(LPVOID param)
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
     switch (fdwReason) {
         case DLL_PROCESS_ATTACH:
+            g_ShutdownEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
             CreateThread(NULL, 0, MainThread, NULL, 0, NULL);
             break;
         
@@ -186,6 +187,10 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
             if (g_ShutdownEvent) {
                 SetEvent(g_ShutdownEvent);
             }
+            // Give the thread a moment to exit (optional but good practice)
+            Sleep(100); 
+            if (g_ShutdownEvent) CloseHandle(g_ShutdownEvent);
+            break;
     }
     return TRUE;
 }
