@@ -27,3 +27,7 @@ xmake
 ### Download
 
 Download latest DLL from Github Actions
+
+
+# Community
+https://discord.gg/vscvprztP3
