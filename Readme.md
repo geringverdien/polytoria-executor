@@ -32,6 +32,7 @@ xmake
 Download latest DLL from Github Actions
 
 #### Download Pre-Built
+[https://github.com/ElCapor/polytoria-executor/blob/master/Release/Polytoria%20Executor%20by%20ElCapor.7z](https://github.com/ElCapor/polytoria-executor/blob/master/Release/Polytoria%20Executor%20by%20ElCapor.7z)
 
 ![alt text](image.png)
 
