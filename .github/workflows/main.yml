@@ -21,5 +21,25 @@ jobs:
     - name: Configure xmake
       run: xmake f -p windows -a x64 -m release
       
-    - name: Build
+    - name: Build C++ DLL
       run: xmake
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Build WPF UI
+      run: dotnet build PolyHack.sln -c Release
+
+    - name: Prepare Artifacts
+      run: |
+        New-Item -ItemType Directory -Force release_pack
+        Copy-Item -Path "build/windows/x64/release/polhack.dll" -Destination "release_pack/poly.dll"
+        Copy-Item -Path "UI/bin/Release/net8.0-windows/*" -Destination "release_pack/" -Recurse
+        
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: PolytoriaExecutor
+        path: release_pack/
