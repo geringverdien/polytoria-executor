@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36915.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolyHack", "UI\PolyHack.csproj", "{4D4B2159-E7B7-BF84-4C7F-7E16104C1420}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4D4B2159-E7B7-BF84-4C7F-7E16104C1420}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D4B2159-E7B7-BF84-4C7F-7E16104C1420}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D4B2159-E7B7-BF84-4C7F-7E16104C1420}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D4B2159-E7B7-BF84-4C7F-7E16104C1420}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D90676F9-20E1-4FB8-95FC-C36FDB505B74}
+	EndGlobalSection
+EndGlobal
