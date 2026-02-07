@@ -116,8 +116,7 @@ namespace PolyHack
         {
             if (isDLL)
             {
-                string dllPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "poly.dll");
-                if (DllInjector.Inject("Polytoria Client", dllPath))
+                if (DllInjector.Inject())
                 {
                     MessageBox.Show("Inject Success!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                     MainTabControl.SelectedItem = AboutTab;
