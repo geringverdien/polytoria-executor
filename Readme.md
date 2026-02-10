@@ -1,8 +1,13 @@
 # POLHACK
 
-# If you wanna try out the V2 version (CLICK ON THIS LINK)[https://github.com/ElCapor/polytoria-executor/tree/V2]
-
 ![alt text](image.png)
+
+![alt text](image-1.png)
+
+![alt text](image-2.png)
+
+# V2 : Added decompilation and explorer & save instance (doesnt work in solo mode !!)
+# THE KEY TO OPEN OR CLOSE THE UI IS "DELETE"
 
 #1 Open Source Polytoria Executor
 
