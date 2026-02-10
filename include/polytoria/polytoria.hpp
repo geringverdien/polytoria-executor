@@ -83,7 +83,7 @@ namespace polytoria
         }
     };
 
-    struct GameIO : public UnityResolve::UnityType::MonoBehaviour
+    struct GameIO : public UC
     {
         static auto GetClass() -> UK *
         {
@@ -130,6 +130,11 @@ namespace polytoria
             GetClass()->SetValue<bool>(this, "running", running);
         }
 
+        auto IsRunning() -> bool
+        {
+            return GetClass()->GetValue<bool>(this, "running");
+        }
+
         auto SetSource(US* source) -> void
         {
             GetClass()->SetValue<US*>(this, "source", source);
@@ -138,6 +143,16 @@ namespace polytoria
         auto GetSource() -> US*
         {
             return GetClass()->GetValue<US*>(this, "source");
+        }
+
+        auto GetRequestedRun() -> bool
+        {
+            return GetClass()->GetValue<bool>(this, "requestedRun");
+        }
+
+        auto SetRequestedRun(bool requestedRun) -> void
+        {
+            GetClass()->SetValue<bool>(this, "requestedRun", requestedRun);
         }
     };
 
@@ -192,9 +207,86 @@ namespace polytoria
                 std::cout << "[ERROR] Failed to run script: method or instance is null!" << std::endl;
         }
 
+        static auto RunScript(BaseScript* scriptInstance) -> void
+        {
+            static UM* method;
+            if (!method)
+                method = GetClass()->Get<UM>("RunScript");
+
+            auto instance = GetInstance();
+            if (method && instance)
+                method->Invoke<void, void *, BaseScript*>(instance, scriptInstance);
+            else
+                std::cout << "[ERROR] Failed to run script: method or instance is null!" << std::endl;
+        }
+
         static auto DecompileScript(BaseScript* scriptInstance) -> std::string
         {
             return scriptInstance->GetSource()->ToString();
+        }
+    };
+
+
+    struct NetworkConnection {
+        static auto GetClass() -> UK*
+        {
+            static UK* klass;
+            if (!klass)
+                klass = U::Get("Mirror.dll")->Get("NetworkConnection");
+            return klass;
+        }
+    };
+
+    struct NetworkConnectionToClient : public NetworkConnection {
+
+        static auto GetClass() -> UK*
+        {
+            static UK* klass;
+            if (!klass)
+                klass = U::Get("Mirror.dll")->Get("NetworkConnectionToClient");
+            return klass;
+        }
+    };
+
+    struct NetMessage
+    {
+        static auto GetClass() -> UK*
+        {
+            static UK* klass;
+            if (!klass)
+                klass = U::Get(ASSEMBLY_CSHARP)->Get("NetMessage");
+            return klass;
+        }
+    };
+
+    struct NetworkEvent : public Instance {
+
+        static auto GetClass() -> UK*
+        {
+            static UK* klass;
+            if (!klass)
+                klass = U::Get(ASSEMBLY_CSHARP)->Get("NetworkEvent");
+            return klass;
+        }
+        using UserCode_InvokeCmd__NetMessage__NetworkConnectionToClient_t = U::MethodPointer<void, NetMessage*, NetworkConnectionToClient*>;
+
+        static auto UserCode_InvokeCmd__NetMessage__NetworkConnectionToClientPtr() -> UM*
+        {
+            static UM* method;
+            if (!method)
+                method = GetClass()->Get<UM>("UserCode_InvokeCmd__NetMessage__NetworkConnectionToClient");
+
+            return method;
+        }
+
+        using UserCode_InvokeClientRpc__NetMessage_t = U::MethodPointer<void, NetMessage*>;
+        static auto UserCode_InvokeClientRpc__NetMessagePtr() -> UM*
+        {
+            static UM* method;
+            if (!method)
+                method = GetClass()->Get<UM>("UserCode_InvokeClientRpc__NetMessage");
+
+            return method;
         }
     };
 }

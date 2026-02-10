@@ -6,15 +6,13 @@
 #include <d3d11.h>
 #include <vector>
 #include <string>
-
-// declare instead of including wp
-namespace polytoria{
-class BaseScript;
-}
+#include <optional>
 
 namespace polytoria
 {
     struct Instance;
+    // sorry daddy nasec
+    class BaseScript;
 }
 
 namespace sped
@@ -75,6 +73,9 @@ namespace sped
 
         void RenderDecompileTab(ScriptDecompileTab* tab);
         void OpenNewScriptDecompileTab(polytoria::BaseScript *instance);
+        bool IsTabAlreadyOpen(polytoria::BaseScript *instance);
+
+        void RenderNetMessageLoggerTab();
 
         void LoadConsole();
 
@@ -85,6 +86,18 @@ namespace sped
         // TBD
         // for decompiled scripts through properties window
         std::vector<ScriptDecompileTab> mDecompileTabs;
+
+    public:
+        struct FileSelectFilters {
+            std::string description;
+            std::string extensions; // e.g. "txt,log"
+        };
+
+        std::optional<std::string> SaveDialog(std::vector<FileSelectFilters> filters);
+        std::optional<std::string> OpenDialog(std::vector<FileSelectFilters> filters);
+
+        std::optional<std::string> ReadFileAsString(const std::string& filePath);
+        void WriteStringToFile(const std::string& filePath, const std::string& content);
     };
 }
 

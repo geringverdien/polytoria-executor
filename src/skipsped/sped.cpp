@@ -12,6 +12,8 @@
 #include <chrono>
 #include <polytoria/polytoria.hpp>
 #include <ShlObj_core.h>
+#include <nfd.h>
+#include <skipsped/net_tracer.hpp>
 
 using namespace sped;
 
@@ -69,7 +71,7 @@ bool Sped::Render(IDXGISwapChain *swap, UINT swapInterval, UINT flags)
             }
 
             // Closable Decompiler Tabs
-            for (auto it = mDecompileTabs.begin(); it != mDecompileTabs.end(); )
+            for (auto it = mDecompileTabs.begin(); it != mDecompileTabs.end();)
             {
                 bool isOpen = true;
                 if (ImGui::BeginTabItem(("Decompile: " + it->instance->GetName()->ToString()).c_str(), &isOpen))
@@ -82,6 +84,12 @@ bool Sped::Render(IDXGISwapChain *swap, UINT swapInterval, UINT flags)
                     it = mDecompileTabs.erase(it);
                 else
                     ++it;
+            }
+
+            if (ImGui::BeginTabItem("Net Message Logger"))
+            {
+                RenderNetMessageLoggerTab();
+                ImGui::EndTabItem();
             }
 
             if (ImGui::BeginTabItem("Settings"))
@@ -117,10 +125,74 @@ void Sped::RenderDecompileTab(ScriptDecompileTab *tab)
         tab->editor.SetLanguageDefinition(TextEditor::LanguageDefinitionId::Lua);
         tab->isEditorReady = true;
     }
+    if (ImGui::BeginMenuBar())
+    {
+        if (ImGui::BeginMenu("File"))
+        {
+            if (ImGui::MenuItem("Open Script..."))
+            {
+                auto filters = std::vector<FileSelectFilters>{
+                    {"Lua Scripts", "lua"},
+                    {"Text Files", "txt"},
+                };
+                auto result = OpenDialog(filters);
+                if (result)
+                {
+                    std::string scriptContent = ReadFileAsString(*result).value_or("");
+                    tab->editor.SetText(scriptContent);
+                }
+            }
+            if (ImGui::MenuItem("Save Script..."))
+            {
+                auto filters = std::vector<FileSelectFilters>{
+                    {"Lua Scripts", "lua"},
+                    {"Text Files", "txt"},
+                };
+                auto result = SaveDialog(filters);
+                if (result)
+                {
+                    std::string scriptContent = tab->editor.GetText();
+                    WriteStringToFile(*result, scriptContent);
+                }
+            }
+
+            ImGui::EndMenu();
+        }
+        ImGui::EndMenuBar();
+    }
+
+    if (tab->instance)
+    {
+        ImGui::Text(("Script Name: " + tab->instance->GetName()->ToString()).c_str());
+        ImGui::Text(("Running: " + std::string(tab->instance->IsRunning() ? "Yes" : "No")).c_str());
+        ImGui::Text("Requested Run: %s", tab->instance->GetRequestedRun() ? "Yes" : "No");
+    }
+    ImGui::Text("[WARNING] Can't save script to game yet idk why it doesnt work");
+    if (ImGui::Button("Save Changes To Game"))
+    {
+        if (tab->instance)
+        {
+            if (!tab->isEditorReady)
+            {
+                std::cout << "Editor not ready, cannot save changes" << std::endl;
+                return;
+            }
+            if (tab->instance->IsRunning())
+            {
+                tab->instance->SetRunning(false);
+            }
+
+            std::string updatedSource = tab->editor.GetText();
+            tab->instance->SetSource(US::New(updatedSource));
+            //polytoria::ScriptService::RunScript(tab->instance);
+
+        }
+    }
+    ImGui::Separator();
     tab->editor.Render(("Decompiled Script: " + tab->instance->GetName()->ToString()).c_str());
 }
 
-void Sped::OpenNewScriptDecompileTab(polytoria::BaseScript *instance) { mDecompileTabs.push_back({ instance }); }
+void Sped::OpenNewScriptDecompileTab(polytoria::BaseScript *instance) { mDecompileTabs.push_back({instance}); }
 
 void Sped::RenderExecutorTab()
 {
@@ -132,6 +204,38 @@ void Sped::RenderExecutorTab()
     }
     if (ImGui::BeginMenuBar())
     {
+        if (ImGui::BeginMenu("File"))
+        {
+            if (ImGui::MenuItem("Open Script..."))
+            {
+                auto filters = std::vector<FileSelectFilters>{
+                    {"Lua Scripts", "lua"},
+                    {"Text Files", "txt"},
+                };
+                auto result = OpenDialog(filters);
+                if (result)
+                {
+                    std::string scriptContent = ReadFileAsString(*result).value_or("");
+                    mScriptEditor->SetText(scriptContent);
+                }
+            }
+            if (ImGui::MenuItem("Save Script..."))
+            {
+                auto filters = std::vector<FileSelectFilters>{
+                    {"Lua Scripts", "lua"},
+                    {"Text Files", "txt"},
+                };
+                auto result = SaveDialog(filters);
+                if (result)
+                {
+                    std::string scriptContent = mScriptEditor->GetText();
+                    WriteStringToFile(*result, scriptContent);
+                }
+            }
+
+            ImGui::EndMenu();
+        }
+
         if (ImGui::BeginMenu("Run"))
         {
             if (ImGui::MenuItem("Execute"))
@@ -149,47 +253,169 @@ void Sped::RenderExecutorTab()
     mScriptEditor->Render("Lua Script Executor");
 }
 
+std::optional<std::string> Sped::SaveDialog(std::vector<FileSelectFilters> filters)
+{
+    std::string savePath;
+    NFD_Init();
+
+    std::vector<nfdu8filteritem_t> nfdFilters;
+    for (const auto &filter : filters)
+    {
+        nfdFilters.push_back({filter.description.c_str(), filter.extensions.c_str()});
+    }
+
+    nfdu8char_t *outPath;
+    nfdsavedialogu8args_t args = {0};
+    args.filterList = nfdFilters.data();
+    args.filterCount = static_cast<nfdfiltersize_t>(nfdFilters.size());
+    nfdresult_t result = NFD_SaveDialogU8_With(&outPath, &args);
+
+    if (result == NFD_OKAY)
+    {
+        savePath = outPath;
+        NFD_FreePathU8(outPath);
+        NFD_Quit();
+        return savePath;
+    }
+    else if (result == NFD_CANCEL)
+    {
+        NFD_Quit();
+        return std::nullopt;
+    }
+    else
+    {
+        printf("Error: %s\n", NFD_GetError());
+        NFD_Quit();
+        return std::nullopt;
+    }
+}
+
+std::optional<std::string> Sped::OpenDialog(std::vector<FileSelectFilters> filters)
+{
+    std::string openPath;
+    NFD_Init();
+
+    std::vector<nfdu8filteritem_t> nfdFilters;
+    for (const auto &filter : filters)
+    {
+        nfdFilters.push_back({filter.description.c_str(), filter.extensions.c_str()});
+    }
+
+    nfdu8char_t *outPath;
+    nfdopendialogu8args_t args = {0};
+    args.filterList = nfdFilters.data();
+    args.filterCount = static_cast<nfdfiltersize_t>(nfdFilters.size());
+    nfdresult_t result = NFD_OpenDialogU8_With(&outPath, &args);
+
+    if (result == NFD_OKAY)
+    {
+        openPath = outPath;
+        NFD_FreePathU8(outPath);
+        NFD_Quit();
+        return openPath;
+    }
+    else if (result == NFD_CANCEL)
+    {
+        NFD_Quit();
+        return std::nullopt;
+    }
+    else
+    {
+        printf("Error: %s\n", NFD_GetError());
+        NFD_Quit();
+        return std::nullopt;
+    }
+}
+
+std::optional<std::string> Sped::ReadFileAsString(const std::string &filePath)
+{
+    std::ifstream file(filePath);
+    if (!file.is_open())
+    {
+        std::cerr << "Failed to open file: " << filePath << std::endl;
+        return std::nullopt;
+    }
+
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    return buffer.str();
+}
+
+void Sped::WriteStringToFile(const std::string &filePath, const std::string &content)
+{
+    std::ofstream file(filePath);
+    if (!file.is_open())
+    {
+        std::cerr << "Failed to open file for writing: " << filePath << std::endl;
+        return;
+    }
+
+    file << content;
+    if (file.fail())
+    {
+        std::cerr << "Failed to write to file: " << filePath << std::endl;
+    }
+}
+
 void Sped::RenderSaveInstanceTab()
 {
     ImGui::Text("Save Instance");
-    if (ImGui::Button("Save to File"))
+    // if (ImGui::Button("Save to File"))
+    // {
+    //     std::cout << "[INFO] Attempting to save instance..." << std::endl;
+    //     char desktopPath[MAX_PATH];
+    //     if (SHGetFolderPathA(NULL, CSIDL_DESKTOP, NULL, 0, desktopPath) == S_OK)
+    //     {
+    //         std::cout << "[INFO] Desktop path: " << desktopPath << std::endl;
+    //     }
+    //     else
+    //     {
+    //         std::cerr << "[ERROR] Failed to get desktop path!" << std::endl;
+    //     }
+
+    //     auto game_name = polytoria::Game::GetGameName();
+    //     if (game_name)
+    //     {
+    //         std::cout << "[INFO] Game name: " << game_name->ToString() << std::endl;
+    //     }
+    //     else
+    //     {
+    //         std::cerr << "[ERROR] Failed to get game name!" << std::endl;
+    //     }
+
+    //     auto game_id = polytoria::Game::GetGameID();
+    //     if (game_id)
+    //     {
+    //         std::cout << "[INFO] Game ID: " << game_id << std::endl;
+    //     }
+    //     else
+    //     {
+    //         std::cerr << "[ERROR] Failed to get game ID!" << std::endl;
+    //         std::cerr << "[ERROR] Are you in solo mode ???" << std::endl;
+    //         return;
+    //     }
+
+    //     std::string path = std::string(desktopPath) + "\\" + game_name->ToString() + ".poly";
+    //     std::cout << "[INFO] Save path: " << path << std::endl;
+    //     polytoria::GameIO::SaveInstance(path.c_str());
+    // }
+
+    if (ImGui::Button("Save Instance"))
     {
-        std::cout << "[INFO] Attempting to save instance..." << std::endl;
-        char desktopPath[MAX_PATH];
-        if (SHGetFolderPathA(NULL, CSIDL_DESKTOP, NULL, 0, desktopPath) == S_OK)
+        std::vector<FileSelectFilters> filters = {
+            {"Polytoria Instance Files", "poly"},
+        };
+        auto savePathOpt = SaveDialog(filters);
+        if (savePathOpt)
         {
-            std::cout << "[INFO] Desktop path: " << desktopPath << std::endl;
+            std::string savePath = *savePathOpt;
+            std::cout << "[INFO] Saving instance to: " << savePath << std::endl;
+            polytoria::GameIO::SaveInstance(savePath.c_str());
         }
         else
         {
-            std::cerr << "[ERROR] Failed to get desktop path!" << std::endl;
+            std::cout << "[INFO] Save cancelled by user." << std::endl;
         }
-
-        auto game_name = polytoria::Game::GetGameName();
-        if (game_name)
-        {
-            std::cout << "[INFO] Game name: " << game_name->ToString() << std::endl;
-        }
-        else
-        {
-            std::cerr << "[ERROR] Failed to get game name!" << std::endl;
-        }
-
-        auto game_id = polytoria::Game::GetGameID();
-        if (game_id)
-        {
-            std::cout << "[INFO] Game ID: " << game_id << std::endl;
-        }
-        else
-        {
-            std::cerr << "[ERROR] Failed to get game ID!" << std::endl;
-            std::cerr << "[ERROR] Are you in solo mode ???" << std::endl;
-            return;
-        }
-
-        std::string path = std::string(desktopPath) + "\\" + game_name->ToString() + ".poly";
-        std::cout << "[INFO] Save path: " << path << std::endl;
-        polytoria::GameIO::SaveInstance(path.c_str());
     }
 }
 
@@ -229,6 +455,16 @@ void RenderInstanceTree(polytoria::Instance *instance, Sped &sped)
         }
         ImGui::TreePop();
     }
+}
+
+bool Sped::IsTabAlreadyOpen(polytoria::BaseScript *instance)
+{
+    for (const auto &tab : mDecompileTabs)
+    {
+        if (tab.instance == instance)
+            return true;
+    }
+    return false;
 }
 
 void Sped::RenderExplorerTab()
@@ -291,8 +527,11 @@ void Sped::RenderExplorerTab()
                         ImGui::TableSetColumnIndex(1);
                         if (ImGui::Button("View Source"))
                         {
-                            polytoria::BaseScript *scriptInstance = reinterpret_cast<polytoria::BaseScript*>(selectedInstance);
-                            OpenNewScriptDecompileTab(scriptInstance);
+                            if (!IsTabAlreadyOpen(reinterpret_cast<polytoria::BaseScript *>(selectedInstance)))
+                            {
+                                polytoria::BaseScript *scriptInstance = reinterpret_cast<polytoria::BaseScript *>(selectedInstance);
+                                OpenNewScriptDecompileTab(scriptInstance);
+                            }
                         }
                     }
                 }
@@ -416,3 +655,17 @@ HRESULT Sped::HookedPresent(IDXGISwapChain *swap, UINT swapInterval, UINT flags)
 }
 
 
+bool NetTracer::isReady = false;
+
+void Sped::RenderNetMessageLoggerTab()
+{
+    ImGui::Text("Net Message Logger");
+    ImGui::Text("[WIP]");
+
+    if (!NetTracer::isReady)
+    {
+        NetTracer::InstallHooks();
+        NetTracer::isReady = true;
+    }
+
+}
