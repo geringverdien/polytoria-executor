@@ -1,5 +1,5 @@
-#ifndef TYPES
-#define TYPES
+#ifndef POLYTORIA
+#define POLYTORIA
 
 #include <unity/u.hpp>
 #include <HookManager.hpp>
@@ -11,16 +11,20 @@ namespace polytoria
         static auto GetClass() -> UK *
         {
             static UK *klass;
-            if (!klass)
+            if (!klass) {
                 klass = U::Get(ASSEMBLY_CSHARP)->Get("Instance");
+                if (!klass) std::cout << "[ERROR] Failed to find class: Instance" << std::endl;
+            }
             return klass;
         }
 
         auto GetName() -> US *
         {
             static UM *method;
-            if (!method)
+            if (!method) {
                 method = GetClass()->Get<UM>("get_Name");
+                if (!method) std::cout << "[ERROR] Failed to find method: Instance::get_Name" << std::endl;
+            }
             if (method)
                 return method->Invoke<US *>(this);
             return {};
@@ -29,8 +33,10 @@ namespace polytoria
         auto GetChildren() -> UArray<Instance *> *
         {
             static UM *method;
-            if (!method)
+            if (!method) {
                 method = GetClass()->Get<UM>("GetChildren");
+                if (!method) std::cout << "[ERROR] Failed to find method: Instance::GetChildren" << std::endl;
+            }
             if (method)
                 return method->Invoke<UArray<Instance *> *>(this);
             return {};
@@ -39,8 +45,10 @@ namespace polytoria
         auto GetFullName() -> US *
         {
             static UM *method;
-            if (!method)
+            if (!method) {
                 method = GetClass()->Get<UM>("get_FullName");
+                if (!method) std::cout << "[ERROR] Failed to find method: Instance::get_FullName" << std::endl;
+            }
             if (method)
                 return method->Invoke<US *>(this);
             return {};
@@ -54,32 +62,49 @@ namespace polytoria
         static auto GetClass() -> UK *
         {
             static UK *klass;
-            if (!klass)
+            if (!klass) {
                 klass = U::Get(ASSEMBLY_CSHARP)->Get("Game");
+                if (!klass) std::cout << "[ERROR] Failed to find class: Game" << std::endl;
+            }
             return klass;
         }
 
         static auto GetInstance() -> Game *
         {
             static Game *instance;
-            if (!instance)
-                GetClass()->Get<UF>("singleton")->GetStaticValue(&instance);
+            if (!instance) {
+                auto klass = GetClass();
+                if (klass) {
+                    auto field = klass->Get<UF>("singleton");
+                    if (field) field->GetStaticValue(&instance);
+                }
+            }
             return instance;
         }
 
         static auto GetGameName() -> US *
         {
             static US* gameName = nullptr;
-            if (!gameName)
-                GetClass()->Get<UF>("GameName")->GetStaticValue(&gameName);
+            if (!gameName) {
+                auto klass = GetClass();
+                if (klass) {
+                    auto field = klass->Get<UF>("GameName");
+                    if (field) field->GetStaticValue(&gameName);
+                }
+            }
             return gameName;
         }
 
         static auto GetGameID() -> int
         {
             static int gameID = 0;
-            if (gameID == 0)
-                GetClass()->Get<UF>("gameID")->GetStaticValue(&gameID);
+            if (gameID == 0) {
+                auto klass = GetClass();
+                if (klass) {
+                    auto field = klass->Get<UF>("gameID");
+                    if (field) field->GetStaticValue(&gameID);
+                }
+            }
             return gameID;
         }
     };
@@ -89,30 +114,41 @@ namespace polytoria
         static auto GetClass() -> UK *
         {
             static UK *klass;
-            if (!klass)
+            if (!klass) {
                 klass = U::Get(ASSEMBLY_CSHARP)->Get("GameIO");
+                if (!klass) std::cout << "[ERROR] Failed to find class: GameIO" << std::endl;
+            }
             return klass;
         }
 
         static auto GetInstance() -> GameIO *
         {
             static GameIO *instance;
-            if (!instance)
-                GetClass()->Get<UF>("singleton")->GetStaticValue(&instance);
+            if (!instance) {
+                auto klass = GetClass();
+                if (klass) {
+                    auto field = klass->Get<UF>("singleton");
+                    if (field) field->GetStaticValue(&instance);
+                }
+            }
             return instance;
         }
 
         static auto SaveInstance(const char *path)
         {
             static UM *method;
-            if (!method)
+            if (!method) {
                 method = GetClass()->Get<UM>("SaveToFile");
+                if (!method) std::cout << "[ERROR] Failed to find method: GameIO::SaveToFile" << std::endl;
+            }
 
             auto instance = GetInstance();
             if (method && instance)
                 method->Invoke<void, void *, US *>(instance, US::New(path));
-            else
-                std::cout << "[ERROR] Failed to save instance: method or instance is null!" << std::endl;
+            else if (!method)
+                std::cout << "[ERROR] Failed to save instance: method is null!" << std::endl;
+            else if (!instance)
+                std::cout << "[ERROR] Failed to save instance: instance is null!" << std::endl;
         }
     };
 
@@ -121,8 +157,10 @@ namespace polytoria
         static auto GetClass() -> UK *
         {
             static UK *klass;
-            if (!klass)
+            if (!klass) {
                 klass = U::Get(ASSEMBLY_CSHARP)->Get("BaseScript");
+                if (!klass) std::cout << "[ERROR] Failed to find class: BaseScript" << std::endl;
+            }
             return klass;
         }
 
@@ -161,8 +199,10 @@ namespace polytoria
             static auto GetClass() -> UK *
             {
                 static UK *klass;
-                if (!klass)
+                if (!klass) {
                     klass = U::Get(ASSEMBLY_CSHARP)->Get("ScriptInstance");
+                    if (!klass) std::cout << "[ERROR] Failed to find class: ScriptInstance" << std::endl;
+                }
                 return klass;
             }
     };
@@ -172,8 +212,10 @@ namespace polytoria
         static auto GetClass() -> UK*
         {
             static UK* klass;
-            if (!klass)
+            if (!klass) {
                 klass = U::Get(ASSEMBLY_CSHARP)->Get("ScriptService");
+                if (!klass) std::cout << "[ERROR] Failed to find class: ScriptService" << std::endl;
+            }
             return klass;
         }
 
@@ -182,16 +224,24 @@ namespace polytoria
         static auto GetInstance() -> ScriptService*
         {
             static ScriptService* instance;
-            if (!instance)
-                instance = GetClass()->Get<UM>("get_Instance")->Invoke<ScriptService*>();
+            if (!instance) {
+                auto klass = GetClass();
+                if (klass) {
+                    auto method = klass->Get<UM>("get_Instance");
+                    if (method) instance = method->Invoke<ScriptService*>();
+                    else std::cout << "[ERROR] Failed to find method: ScriptService::get_Instance" << std::endl;
+                }
+            }
             return instance;
         }
 
         static auto RunScript(std::string script) -> void
         {
             static UM* method;
-            if (!method)
+            if (!method) {
                 method = GetClass()->Get<UM>("RunScript");
+                if (!method) std::cout << "[ERROR] Failed to find method: ScriptService::RunScript" << std::endl;
+            }
 
             Game* gameInstance = Game::GetInstance();
             if (!gameInstance)
@@ -207,21 +257,27 @@ namespace polytoria
             auto instance = GetInstance();
             if (method && instance)
                 method->Invoke<void, void *, BaseScript*>(instance, scriptInstance);
-            else
-                std::cout << "[ERROR] Failed to run script: method or instance is null!" << std::endl;
+            else if (!method)
+                std::cout << "[ERROR] Failed to run script: method is null!" << std::endl;
+            else if (!instance)
+                std::cout << "[ERROR] Failed to run script: instance is null!" << std::endl;
         }
 
         static auto RunScript(BaseScript* scriptInstance) -> void
         {
             static UM* method;
-            if (!method)
+            if (!method) {
                 method = GetClass()->Get<UM>("RunScript");
+                if (!method) std::cout << "[ERROR] Failed to find method: ScriptService::RunScript" << std::endl;
+            }
 
             auto instance = GetInstance();
             if (method && instance)
                 method->Invoke<void, void *, BaseScript*>(instance, scriptInstance);
-            else
-                std::cout << "[ERROR] Failed to run script: method or instance is null!" << std::endl;
+            else if (!method)
+                std::cout << "[ERROR] Failed to run script: method is null!" << std::endl;
+            else if (!instance)
+                std::cout << "[ERROR] Failed to run script: instance is null!" << std::endl;
         }
 
         static auto DecompileScript(BaseScript* scriptInstance) -> std::string
@@ -235,8 +291,10 @@ namespace polytoria
         static auto GetClass() -> UK*
         {
             static UK* klass;
-            if (!klass)
+            if (!klass) {
                 klass = U::Get("Mirror.dll")->Get("NetworkConnection");
+                if (!klass) std::cout << "[ERROR] Failed to find class: NetworkConnection" << std::endl;
+            }
             return klass;
         }
     };
@@ -246,8 +304,10 @@ namespace polytoria
         static auto GetClass() -> UK*
         {
             static UK* klass;
-            if (!klass)
+            if (!klass) {
                 klass = U::Get("Mirror.dll")->Get("NetworkConnectionToClient");
+                if (!klass) std::cout << "[ERROR] Failed to find class: NetworkConnectionToClient" << std::endl;
+            }
             return klass;
         }
     };
@@ -257,8 +317,10 @@ namespace polytoria
         static auto GetClass() -> UK*
         {
             static UK* klass;
-            if (!klass)
+            if (!klass) {
                 klass = U::Get(ASSEMBLY_CSHARP)->Get("NetMessage");
+                if (!klass) std::cout << "[ERROR] Failed to find class: NetMessage" << std::endl;
+            }
             return klass;
         }
     };
@@ -268,32 +330,104 @@ namespace polytoria
         static auto GetClass() -> UK*
         {
             static UK* klass;
-            if (!klass)
+            if (!klass) {
                 klass = U::Get(ASSEMBLY_CSHARP)->Get("NetworkEvent");
+                if (!klass) std::cout << "[ERROR] Failed to find class: NetworkEvent" << std::endl;
+            }
             return klass;
         }
-        using UserCode_InvokeCmd__NetMessage__NetworkConnectionToClient_t = U::MethodPointer<void, NetMessage*, NetworkConnectionToClient*>;
 
-        static auto UserCode_InvokeCmd__NetMessage__NetworkConnectionToClientPtr() -> UM*
+    };
+
+    struct Table {
+        static auto GetClass() -> UK*
         {
-            static UM* method;
-            if (!method)
-                method = GetClass()->Get<UM>("UserCode_InvokeCmd__NetMessage__NetworkConnectionToClient");
-
-            return method;
+            static UK* klass;
+            if (!klass) {
+                klass = U::Get(ASSEMBLY_CSHARP_FIRSTPASS)->Get("Table", "MoonSharp.Interpreter");
+                if (!klass) std::cout << "[ERROR] Failed to find class: Table" << std::endl;
+            }
+            return klass;
         }
 
-        using UserCode_InvokeClientRpc__NetMessage_t = U::MethodPointer<void, NetMessage*>;
-        static auto UserCode_InvokeClientRpc__NetMessagePtr() -> UM*
-        {
-            static UM* method;
-            if (!method)
-                method = GetClass()->Get<UM>("UserCode_InvokeClientRpc__NetMessage");
+        // could be any object
+        auto SetItem(UO* key, UO* value) -> void {
+            static UM* setItemMethod;
+            if (!setItemMethod) {
+                setItemMethod = GetClass()->Get<UM>("set_Item", {"System.Object", "System.Object"});
+                if (!setItemMethod) std::cout << "[ERROR] Failed to find method: Table::set_Item" << std::endl;
+            }
+            if (setItemMethod)
+                setItemMethod->Invoke<void>(this, key, value);
+        }
+    };
 
-            return method;
+    struct ScriptExecutionContext {
+        static auto GetClass() -> UK*
+        {
+            static UK* klass;
+            if (!klass) {
+                klass = U::Get(ASSEMBLY_CSHARP_FIRSTPASS)->Get("ScriptExecutionContext", "MoonSharp.Interpreter");
+                if (!klass) std::cout << "[ERROR] Failed to find class: ScriptExecutionContext" << std::endl;
+            }
+            return klass;
+        }
+    };
+
+    struct DynValue {
+        static auto GetClass() -> UK*
+        {
+            static UK* klass;
+            if (!klass) {
+                klass = U::Get(ASSEMBLY_CSHARP_FIRSTPASS)->Get("DynValue", "MoonSharp.Interpreter");
+                if (!klass) std::cout << "[ERROR] Failed to find class: DynValue" << std::endl;
+            }
+            return klass;
+        }
+
+        static auto NewString(US* str) -> DynValue* {
+            static UM* newStringMethod;
+            if (!newStringMethod) {
+                newStringMethod = GetClass()->Get<UM>("NewString");
+                if (!newStringMethod) std::cout << "[ERROR] Failed to find method: DynValue::NewString" << std::endl;
+            }
+            if (newStringMethod)
+                return newStringMethod->Invoke<DynValue*, US*>(str);
+            return {};
+        }
+
+        static auto NewCallback(UO* callback, US* name) -> DynValue* {
+            static UM* newCallbackMethod;
+            if (!newCallbackMethod) {
+                newCallbackMethod = GetClass()->Get<UM>("NewCallback");
+                if (!newCallbackMethod) std::cout << "[ERROR] Failed to find method: DynValue::NewCallback" << std::endl;
+            }
+            if (newCallbackMethod)
+                return newCallbackMethod->Invoke<DynValue*, UO*, US*>(callback, name);
+            return {};
+        }
+    };
+
+    struct CallbackArguments {
+        static auto GetClass() -> UK*
+        {
+            static UK* klass;
+            if (!klass) {
+                klass = U::Get(ASSEMBLY_CSHARP_FIRSTPASS)->Get("CallbackArguments", "MoonSharp.Interpreter");
+                if (!klass) std::cout << "[ERROR] Failed to find class: CallbackArguments" << std::endl;
+            }
+            return klass;
+        }
+
+        auto GetArgs() -> U::UnityType::List<DynValue*>* {
+            return GetClass()->GetValue<U::UnityType::List<DynValue*>*>(this, "m_Args");
+        }
+
+        auto GetCount() -> int {
+            return GetClass()->GetValue<int>(this, "m_Count");
         }
     };
 }
 
-#endif /* TYPES */
+#endif /* POLYTORIA */
  

@@ -1,3 +1,13 @@
+/**
+ * @file spoofer.cpp
+ * @author ElCapor (infosec@yu-tech.cloud)
+ * @brief
+ * @version 0.1
+ * @date 2026-02-11
+ *
+ * CC-BY-SA 4.0 Copyright (c) 2026 @ElCapor
+ *
+ */
 #include <spoofer.hpp>
 #include <cstdint>
 #include <HookManager.hpp>
@@ -7,8 +17,8 @@
 #include <algorithm>
 #include <simple_filesystem/mod.hpp>
 
-
-std::string scramble(const std::string& input) {
+std::string scramble(const std::string &input)
+{
     std::string scrambled = input;
     std::random_device rd;
     std::mt19937 g(rd());
@@ -16,122 +26,101 @@ std::string scramble(const std::string& input) {
     return scrambled;
 }
 
-US* GetDeviceUniqueIdentifier()
-{
-    US* deviceId = HookManager::Call(GetDeviceUniqueIdentifier);
-    std::string sDeviceId = deviceId->ToString();
-
-    mod::ToriaFile config;
-    config.load("hwid.toria");
-
-    if (auto savedHwid = config.get("hwid")) {
-        std::cout << "[GetDeviceUniqueIdentifier] Returning saved HWID: " << *savedHwid << std::endl;
-        return US::New(*savedHwid);
-    }
-
-    std::cout << "[GetDeviceUniqueIdentifier] No saved HWID found. Original: " << sDeviceId << std::endl;
-    std::string scrambledDeviceId = scramble(sDeviceId);
-    
-    config.set("hwid", scrambledDeviceId);
-    config.save("hwid.toria");
-
-    std::cout << "[GetDeviceUniqueIdentifier] Scrambled and saved new HWID: " << scrambledDeviceId << std::endl;
-    return US::New(scrambledDeviceId);
-}
-
-void GameStartHook(void* __this)
-{
-    std::cout << "[Game.Start] Game.Start method called" << std::endl;
-    HookManager::Call(GameStartHook, __this);
-    LoadLibraryA("skipsped.dll");
-}
-
-void SpooferHooks() {
-    HMODULE gameAssembly = GetModuleHandleA("GameAssembly.dll");
-    if (!gameAssembly) {
-        std::cout << "[ERROR] Failed to get GameAssembly.dll handle" << std::endl;
-        return;
-    }
-
-    U::Init(gameAssembly, U::Mode::Il2Cpp);
-    U::ThreadAttach();
-
-    UK* SystemInfo = U::Get("UnityEngine.CoreModule.dll")->Get("SystemInfo");
-    if (!SystemInfo) {
-        std::cout << "[ERROR] Failed to get SystemInfo class" << std::endl;
-        return;
-    }
-
-    const auto GetDeviceUniqueIdentifierMethod = SystemInfo->Get<UM>("GetDeviceUniqueIdentifier");
-    if (!GetDeviceUniqueIdentifierMethod) {
-        std::cout << "[ERROR] Failed to get GetDeviceUniqueIdentifier method" << std::endl;
-        return;
-    }
-
-    HookManager::Install(GetDeviceUniqueIdentifierMethod->Cast<US*>(), GetDeviceUniqueIdentifier);
-
-
-    UK* Game = U::Get(ASSEMBLY_CSHARP)->Get("Game");
-    if (!Game) {
-        std::cout << "[ERROR] Failed to get Game class" << std::endl;
-        return;
-    }
-
-    UM* GameStart = Game->Get<UM>("Start");
-    if (!GameStart) {
-        std::cout << "[ERROR] Failed to get Game.Start method" << std::endl;
-        return;
-    }
-
-
-
-    HookManager::Install(GameStart->Cast<void, void*>(), GameStartHook);
-    Sleep(100);
-    std::cout << "[SpooferHooks] Hooks installed successfully" << std::endl;
-}
-
 // UnityPlayer.dll + 0x804710
-constexpr std::uintptr_t UNITY_PLR_INITIALIZE_GAMEASSEMBLY = 0x804710;
-using UnityPlayer_InitializeGameAssembly_t = bool(*)(void*, void*);
+// constexpr std::uintptr_t UNITY_PLR_INITIALIZE_GAMEASSEMBLY = 0x804710;
+// using UnityPlayer_InitializeGameAssembly_t = bool(*)(void*, void*);
 
-bool InitializeGameAssembly(void* _1, void* _2)
-{
-    auto ret = HookManager::Call(InitializeGameAssembly, _1, _2);
-    SpooferHooks();
-    Sleep(100);
-    return ret;
-}
-
-void OpenConsole()
-{
-    AllocConsole();
-    FILE* fp;
-    SetConsoleTitleA("SkipSped Console");
-    freopen_s(&fp, "CONOUT$", "w", stdout);
-    freopen_s(&fp, "CONOUT$", "w", stderr);
-    freopen_s(&fp, "CONIN$", "r", stdin);
-    std::cout << "[SkipSpoofer] Started" << std::endl;
-}
+// +--------------------------------------------------------+
+// |                       Functions                        |
+// +--------------------------------------------------------+
+void OpenConsole();
+HMODULE LoadLibraryW_Hook(LPCWSTR lpLibFileName);
 
 void spoofer::main_thread()
 {
     OpenConsole();
 
-    HMODULE unityPlayer = GetModuleHandleA("UnityPlayer.dll");
-    if (!unityPlayer)
+    // I am gonna test a new approach to hook gameassembly...
+    HMODULE kernel32 = GetModuleHandleA("kernel32.dll");
+    if (!kernel32)
     {
-        std::cout << "[ERROR] Failed to get UnityPlayer.dll handle" << std::endl;
+        std::cerr << "Failed to get kernel32.dll handle" << std::endl;
         return;
     }
 
-    auto initializeGameAssemblyAddr = reinterpret_cast<UnityPlayer_InitializeGameAssembly_t>(reinterpret_cast<std::uintptr_t>(unityPlayer) + UNITY_PLR_INITIALIZE_GAMEASSEMBLY);
-    if (!initializeGameAssemblyAddr)    {
-        std::cout << "[ERROR] Failed to calculate InitializeGameAssembly address" << std::endl;
+    // Get the address of LoadLibraryW
+    auto LoadLibraryW_addr = GetProcAddress(kernel32, "LoadLibraryW");
+    if (!LoadLibraryW_addr)
+    {
+        std::cerr << "Failed to get LoadLibraryW address" << std::endl;
         return;
     }
 
-    HookManager::Install(initializeGameAssemblyAddr, InitializeGameAssembly);
-   
-    std::cout << "[SkipSpoofer] Hooks installed, Game will now start..." << std::endl;
+    // Hook LoadLibraryW to detect when GameAssembly.dll is loaded
+    HookManager::Install(reinterpret_cast<HMODULE(*)(LPCWSTR)>(LoadLibraryW_addr), LoadLibraryW_Hook);
+    std::cout << "[SkipSpoofer] LoadLibraryW hooked" << std::endl;
+}
 
+// +--------------------------------------------------------+
+// |                       ADDRESSES                        |
+// +--------------------------------------------------------+
+constexpr std::uintptr_t GetDeviceUniqueID_Addr = 0x1A56880;
+// it takes a MethodInfo* ptr, but because of stdcall, it's in a register, so we can ignore it
+using GetDeviceUniqueID_t = US *(*)();
+
+// +--------------------------------------------------------+
+// |                        CONSOLE                         |
+// +--------------------------------------------------------+
+void OpenConsole()
+{
+    AllocConsole();
+    FILE *fp;
+    SetConsoleTitleA("SkipSped Console");
+    freopen_s(&fp, "CONOUT$", "w", stdout);
+    freopen_s(&fp, "CONERR$", "w", stderr);
+    freopen_s(&fp, "CONIN$", "r", stdin);
+    std::cout << "[SkipSpoofer] Started" << std::endl;
+}
+
+bool init = false;
+// +--------------------------------------------------------+
+// |                       HWID Spoof                       |
+// +--------------------------------------------------------+
+US *GetDeviceUniqueID_Hook()
+{
+    if (!init)
+    {
+        UnityResolve::Init(GetModuleHandleW(L"GameAssembly.dll"), U::Mode::Il2Cpp);
+        UnityResolve::ThreadAttach();
+        init = true;
+    }
+    US *originalID = HookManager::Call(GetDeviceUniqueID_Hook);
+    std::string originalIDStr = originalID->ToString();
+    std::string scrambledID = scramble(originalIDStr);
+    US* fakeID = US::New(scrambledID);
+    std::cout << "[SkipSpoofer] Original HWID: " << originalIDStr << std::endl;
+    std::cout << "[SkipSpoofer] Scrambled HWID: " << scrambledID << std::endl;
+    return fakeID;
+}
+
+// +--------------------------------------------------------+
+// |                         HOOKS                          |
+// +--------------------------------------------------------+
+HMODULE LoadLibraryW_Hook(LPCWSTR lpLibFileName)
+{
+    // WE are going to wait for gameassembly to be loaded, then we will hook it
+    HMODULE module = HookManager::Call(LoadLibraryW_Hook, lpLibFileName);
+
+    std::wstring libName(lpLibFileName);
+    if (libName.find(L"GameAssembly.dll") != std::wstring::npos)
+    {
+        std::cout << "[SkipSpoofer] GameAssembly.dll loaded, hooking..." << std::endl;
+        std::cout << "[SkipSpoofer] Base address: " << std::hex <<module << std::endl;
+
+        // Hook GetDeviceUniqueID
+        GetDeviceUniqueID_t originalGetDeviceUniqueID = reinterpret_cast<GetDeviceUniqueID_t>((std::uintptr_t)module + GetDeviceUniqueID_Addr);
+        HookManager::Install(originalGetDeviceUniqueID, GetDeviceUniqueID_Hook);
+    }
+
+    return module;
 }

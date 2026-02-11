@@ -19,3 +19,7 @@ target("version")
     add_files("proxy/version.cpp", "proxy/spoofer.cpp")
     add_packages("microsoft-detours")
     set_filename("version.dll")
+
+    after_build(function(target)
+        os.cp(target:targetfile(), "C:\\Users\\delly\\AppData\\Roaming\\Polytoria\\Client\\1.4.152")
+    end)

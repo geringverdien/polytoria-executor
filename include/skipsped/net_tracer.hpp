@@ -3,24 +3,44 @@
 #include <HookManager.hpp>
 
 #include <polytoria/polytoria.hpp>
+using namespace polytoria;
 
 struct NetTracer {
 
     static bool isReady;
     
-    static void UserCode_InvokeCmd__NetMessage__NetworkConnectionToClientHooked(polytoria::NetMessage* message, polytoria::NetworkConnectionToClient* conn) {
-        std::cout << "[NetTracer] Cmd Invoked: " << std::endl;
-
-    }
-
-    static void UserCode_InvokeClientRpc__NetMessage(polytoria::NetMessage* message) {
-        std::cout << "[NetTracer] ClientRpc Invoked: " << std::endl;
+    static void InvokeServerHook(NetworkEvent* evt,NetMessage* message)
+    {
+        std::cout << "[INFO] Invoking server hook for message: " << evt->GetName()->ToString() << std::endl;
+        HookManager::Call(InvokeServerHook, evt, message);
     }
     
+    static void UserCode_InvokeClientRpc__NetMessage(NetworkEvent* evt, NetMessage* message)
+    {
+        std::cout << "[INFO] Invoking client RPC hook for message: " << evt->GetName()->ToString() << std::endl;
+        HookManager::Call(UserCode_InvokeClientRpc__NetMessage, evt, message);
+    }
+
     static void InstallHooks()
     {
-        HookManager::Install(polytoria::NetworkEvent::UserCode_InvokeCmd__NetMessage__NetworkConnectionToClientPtr()->Cast<void, polytoria::NetMessage*, polytoria::NetworkConnectionToClient*>(), UserCode_InvokeCmd__NetMessage__NetworkConnectionToClientHooked);
-        HookManager::Install(polytoria::NetworkEvent::UserCode_InvokeClientRpc__NetMessagePtr()->Cast<void, polytoria::NetMessage*>(), UserCode_InvokeClientRpc__NetMessage);
+        UM* method = NetworkEvent::GetClass()->Get<UM>("InvokeServer");
+        if (method) {
+            std::cout << "[INFO] Installing hook for NetworkEvent::InvokeServer" << std::endl;
+            HookManager::Install(method->Cast<void, NetworkEvent*, NetMessage*>(), InvokeServerHook);
+            isReady = true;
+        } else {
+            std::cout << "[ERROR] Failed to find method NetworkEvent::InvokeServer" << std::endl;
+        }
+
+        UM* rpcMethod = NetworkEvent::GetClass()->Get<UM>("UserCode_InvokeClientRpc__NetMessage");
+        if (rpcMethod) {
+            std::cout << "[INFO] Installing hook for NetworkEvent::UserCode_InvokeClientRpc__NetMessage" << std::endl;
+            HookManager::Install(rpcMethod->Cast<void, NetworkEvent*, NetMessage*>(), UserCode_InvokeClientRpc__NetMessage);
+        } else {
+            std::cout << "[ERROR] Failed to find method NetworkEvent::UserCode_InvokeClientRpc__NetMessage" << std::endl;
+        }
+
+        std::cout << "[INFO] NetTracer hooks installed" << std::endl;
     }
 };
 

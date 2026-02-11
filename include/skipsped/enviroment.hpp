@@ -1,33 +1,39 @@
-#ifndef ENVIRONMENT_HPP
-#define ENVIRONMENT_HPP
+#ifndef ENVIROMENT
+#define ENVIROMENT
 
 #include <HookManager.hpp>
 #include <polytoria/polytoria.hpp>
-
+using namespace polytoria;
 #include <unity/il2cpp.hpp>
 
 #include <unity/u.hpp>
+#include <format>
 
-using CF = UO*(*)(UO*, UO*);
+using CF = DynValue*(*)(ScriptExecutionContext*, CallbackArguments*);
 
-UO* CF_Poop(UO* ctx, UO* args)
+DynValue* CF_Poop(ScriptExecutionContext* ctx, CallbackArguments* args)
 {
 	std::printf("Yas\n");
-
-	const auto asmFirstPass = U::Get("Assembly-CSharp-firstpass.dll");
-	auto dynvalueKlass = asmFirstPass->Get("DynValue", "MoonSharp.Interpreter");
-
-	auto val = dynvalueKlass->Get<U::Method>("NewString")->Cast<UO*, US*>()(US::New("Nooo"));
-	return val;
+;
+	return DynValue::NewString(US::New("Poop"));
 }
 
-void RegisterCFunction(const std::string& name, CF func, UO* Table)
+DynValue* hookinvokeserver(ScriptExecutionContext* ctx, CallbackArguments* args)
 {
-	// TODO: uhh maybe add some "type caching" feature to avoid doing lookups every time
-	const static auto firstpassAsm = U::Get(ASSEMBLY_CSHARP_FIRSTPASS);
-	auto dynValueKlass = firstpassAsm->Get("DynValue", "MoonSharp.Interpreter");
-	auto scriptExecutionContext = firstpassAsm->Get("ScriptExecutionContext", "MoonSharp.Interpreter");
-	auto callbackArguments = firstpassAsm->Get("CallbackArguments", "MoonSharp.Interpreter");
+	std::printf("InvokeServer called!\n");
+	std::string message = std::format("InvokeServer called with {} arguments", args->GetCount());
+	std::cout << message << std::endl;
+	return DynValue::NewString(US::New(message.c_str()));
+}
+
+void RegisterCFunction(const std::string& name, CF func, Table* table)
+{
+	// ~TODO: uhh maybe add some "type caching" feature to avoid doing lookups every time~ / Solved by ElCapor :wink:
+	auto dynValueKlass = DynValue::GetClass();
+	auto scriptExecutionContext = ScriptExecutionContext::GetClass();
+	auto callbackArguments = CallbackArguments::GetClass();
+	
+	if (!dynValueKlass || !scriptExecutionContext || !callbackArguments) return;
 			
 	auto mi = il2cpp::CreateCustomMethodInfo("huge anus",
 		{
@@ -40,22 +46,36 @@ void RegisterCFunction(const std::string& name, CF func, UO* Table)
 
 
 	const auto mscorelibAsm = U::Get("mscorlib.dll");
-	const auto type = mscorelibAsm->Get("Func`3")->GetType();
+	if (!mscorelibAsm) {
+		std::cout << "[ERROR] Failed to find assembly: mscorlib.dll" << std::endl;
+		return;
+	}
+
+	const auto typeKlass = mscorelibAsm->Get("Func`3", "System");
+	if (!typeKlass) {
+		std::cout << "[ERROR] Failed to find class: Func`3" << std::endl;
+		return;
+	}
+
+	const auto type = typeKlass->GetType();
 
 	auto delegates = U::Invoke<UO*, uintptr_t>("il2cpp_object_new", *(uintptr_t*)type);
 	il2cpp::BindDelegate((il2cpp::Il2CppDelegate*)delegates, mi);
 
-	auto finalCallback = dynValueKlass->Get<U::Method>("NewCallback")->Cast<UO*, UO*, US*>()((UO*)delegates, 0);
+	auto finalCallbackMethod = dynValueKlass->Get<UM>("NewCallback");
+	if (!finalCallbackMethod) {
+		std::cout << "[ERROR] Failed to find method: DynValue::NewCallback" << std::endl;
+		return;
+	}
+	auto finalCallback = finalCallbackMethod->Cast<UO*, UO*, US*>()((UO*)delegates, 0);
 
-	U::Get(ASSEMBLY_CSHARP_FIRSTPASS)
-	->Get("Table")
-	->Get<U::Method>("set_Item", {"System.Object", "System.Object"})
-	->Invoke<void>(Table, US::New("Poop"), finalCallback);
+	table->SetItem(US::New(name.c_str()), (UO*)finalCallback);
 }
 
-void InstallEnviromentFunctions(UO* Table)
+void InstallEnviromentFunctions(Table* table)
 {
-	RegisterCFunction("Poop", CF_Poop, Table);
+	RegisterCFunction("Poop", CF_Poop, table);
+	RegisterCFunction("InvokeServerHook", hookinvokeserver, table);
 }
 
-#endif /* ENVIRONMENT_HPP */
+#endif /* ENVIROMENT */
