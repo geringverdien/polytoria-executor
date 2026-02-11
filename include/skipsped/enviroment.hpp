@@ -9,22 +9,41 @@ using namespace polytoria;
 #include <unity/u.hpp>
 #include <format>
 
-using CF = DynValue*(*)(ScriptExecutionContext*, CallbackArguments*);
+using CF = DynValue*(*)(void*, ScriptExecutionContext*, CallbackArguments*);
 
-DynValue* CF_Poop(ScriptExecutionContext* ctx, CallbackArguments* args)
+DynValue* CF_Poop(void*, ScriptExecutionContext* ctx, CallbackArguments* args)
 {
 	std::printf("Yas\n");
 ;
 	return DynValue::NewString(US::New("Poop"));
 }
 
-DynValue* hookinvokeserver(ScriptExecutionContext* ctx, CallbackArguments* args)
+DynValue* hookinvokeserver(void*, ScriptExecutionContext* ctx, CallbackArguments* args)
 {
-	std::printf("InvokeServer called!\n");
-	std::string message = std::format("InvokeServer called with {} arguments", args->GetCount());
-	std::cout << message << std::endl;
-	return DynValue::NewString(US::New(message.c_str()));
+    std::printf("InvokeServer called!\n");
+	std::cout << "callback type" << args->GetType()->GetFullNameOrDefault()->ToString() << std::endl;
+    
+    // Get count - this should work
+    int count = args->GetCount();
+    std::cout << "count = " << count << std::endl;
+    
+    // Get the args list - cast from IList to List if needed
+    auto argList = args->GetArgs();
+    
+    // Try accessing size directly (it's a field in List<Type>)
+    // The IList interface might have Count property instead
+    int listSize = argList->size;  // If cast to List* worked
+    std::cout << "listSize = " << listSize << std::endl;
+    
+    // // Iterate through arguments
+    // for (int i = 0; i < count; i++) {
+    //     DynValue* arg = (*argList)[i];  // Use operator[]
+    //     std::cout << "Arg " << i << std::endl;
+    // }
+    
+    return DynValue::NewString(US::New("check urcmd nigga"));
 }
+
 
 void RegisterCFunction(const std::string& name, CF func, Table* table)
 {

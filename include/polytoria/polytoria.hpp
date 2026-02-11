@@ -362,7 +362,7 @@ namespace polytoria
         }
     };
 
-    struct ScriptExecutionContext {
+    struct ScriptExecutionContext : public UO {
         static auto GetClass() -> UK*
         {
             static UK* klass;
@@ -374,7 +374,7 @@ namespace polytoria
         }
     };
 
-    struct DynValue {
+    struct DynValue : public UO {
         static auto GetClass() -> UK*
         {
             static UK* klass;
@@ -408,7 +408,7 @@ namespace polytoria
         }
     };
 
-    struct CallbackArguments {
+    struct CallbackArguments : public UO {
         static auto GetClass() -> UK*
         {
             static UK* klass;
