@@ -16,33 +16,33 @@ std::string scramble(const std::string& input) {
     return scrambled;
 }
 
-US* GetDeviceUniqueIdentifer()
+US* GetDeviceUniqueIdentifier()
 {
-    US* deviceId = HookManager::Call(GetDeviceUniqueIdentifer);
+    US* deviceId = HookManager::Call(GetDeviceUniqueIdentifier);
     std::string sDeviceId = deviceId->ToString();
 
     mod::ToriaFile config;
     config.load("hwid.toria");
 
     if (auto savedHwid = config.get("hwid")) {
-        std::cout << "[GetDeviceUniqueIdentifer] Returning saved HWID: " << *savedHwid << std::endl;
+        std::cout << "[GetDeviceUniqueIdentifier] Returning saved HWID: " << *savedHwid << std::endl;
         return US::New(*savedHwid);
     }
 
-    std::cout << "[GetDeviceUniqueIdentifer] No saved HWID found. Original: " << sDeviceId << std::endl;
+    std::cout << "[GetDeviceUniqueIdentifier] No saved HWID found. Original: " << sDeviceId << std::endl;
     std::string scrambledDeviceId = scramble(sDeviceId);
     
     config.set("hwid", scrambledDeviceId);
     config.save("hwid.toria");
 
-    std::cout << "[GetDeviceUniqueIdentifer] Scrambled and saved new HWID: " << scrambledDeviceId << std::endl;
+    std::cout << "[GetDeviceUniqueIdentifier] Scrambled and saved new HWID: " << scrambledDeviceId << std::endl;
     return US::New(scrambledDeviceId);
 }
 
-void GameGameHook(void* __this)
+void GameStartHook(void* __this)
 {
-    std::cout << "[Game.Game] Game.Game method called" << std::endl;
-    HookManager::Call(GameGameHook, __this);
+    std::cout << "[Game.Start] Game.Start method called" << std::endl;
+    HookManager::Call(GameStartHook, __this);
     LoadLibraryA("skipsped.dll");
 }
 
@@ -68,7 +68,7 @@ void SpooferHooks() {
         return;
     }
 
-    HookManager::Install(GetDeviceUniqueIdentifierMethod->Cast<US*>(), GetDeviceUniqueIdentifer);
+    HookManager::Install(GetDeviceUniqueIdentifierMethod->Cast<US*>(), GetDeviceUniqueIdentifier);
 
 
     UK* Game = U::Get(ASSEMBLY_CSHARP)->Get("Game");
@@ -77,15 +77,15 @@ void SpooferHooks() {
         return;
     }
 
-    UM* GameGame = Game->Get<UM>("Start");
-    if (!GameGame) {
+    UM* GameStart = Game->Get<UM>("Start");
+    if (!GameStart) {
         std::cout << "[ERROR] Failed to get Game.Start method" << std::endl;
         return;
     }
 
 
 
-    HookManager::Install(GameGame->Cast<void, void*>(), GameGameHook);
+    HookManager::Install(GameStart->Cast<void, void*>(), GameStartHook);
     Sleep(100);
     std::cout << "[SpooferHooks] Hooks installed successfully" << std::endl;
 }
