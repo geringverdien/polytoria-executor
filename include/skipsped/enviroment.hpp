@@ -22,11 +22,17 @@ DynValue* hookinvokeserver(void*, ScriptExecutionContext* ctx, CallbackArguments
 {
     std::printf("InvokeServer called!\n");
 	std::cout << "callback type" << args->GetType()->GetFullNameOrDefault()->ToString() << std::endl;
-    
+
+
     // Get count - this should work
     int count = args->GetCount();
     std::cout << "count = " << count << std::endl;
-    
+	
+	if (count < 2) {
+		std::cout << "Not enough arguments passed to InvokeServer hook" << std::endl;
+		return DynValue::NewString(US::New("Not enough arguments"));
+	}
+	
     // Get the args list - cast from IList to List if needed
     auto argList = args->GetArgs();
     

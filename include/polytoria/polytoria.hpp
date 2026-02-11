@@ -406,6 +406,17 @@ namespace polytoria
                 return newCallbackMethod->Invoke<DynValue*, UO*, US*>(callback, name);
             return {};
         }
+
+        static auto NewNil() -> DynValue* {
+            static UM* newNilMethod;
+            if (!newNilMethod) {
+                newNilMethod = GetClass()->Get<UM>("NewNil");
+                if (!newNilMethod) std::cout << "[ERROR] Failed to find method: DynValue::NewNil" << std::endl;
+            }
+            if (newNilMethod)
+                return newNilMethod->Invoke<DynValue*>();
+            return {};
+        }
     };
 
     struct CallbackArguments : public UO {
@@ -427,6 +438,20 @@ namespace polytoria
             return GetClass()->GetValue<int>(this, "m_Count");
         }
     };
+
+    struct Closure : public UO {
+        static auto GetClass() -> UK*
+        {
+            static UK* klass;
+            if (!klass) {
+                klass = U::Get(ASSEMBLY_CSHARP_FIRSTPASS)->Get("Closure", "MoonSharp.Interpreter");
+                if (!klass) std::cout << "[ERROR] Failed to find class: Closure" << std::endl;
+            }
+            return klass;
+        }
+
+
+    }
 }
 
 #endif /* POLYTORIA */
