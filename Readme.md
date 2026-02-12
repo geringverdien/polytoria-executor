@@ -75,3 +75,5 @@ In no particular order (as far as my memory goes) - dprtq max aip medic farhat m
 - DynValue's Closure is cleared when another script is ran wowie
 It's 3 am i am dead atp
 ![alt text](image-3.png)
+
+![alt text](image-4.png)
