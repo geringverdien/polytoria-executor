@@ -10,17 +10,21 @@
 #define WINDOWS_MODE 1
 #include <unity/u.hpp>
 #include <chrono>
-#include <polytoria/polytoria.hpp>
+#include <ptoria/polytoria.hpp>
 #include <ShlObj_core.h>
 #include <nfd.h>
 #include <skipsped/net_tracer.hpp>
-#include <polytoria/networking/mirror_hook.hpp>
+#include <ptoria/networking/mirror_hook.hpp>
+#include <nasec/assert.h>
 
 using namespace sped;
 
 void Sped::Init()
 {
     LoadConsole();
+    nasec::Install();
+    polytoria::Script* script = nullptr;
+    nasec::Assert(script, "Test assertion...");
     LoadUnityAPI();
     LoadImGui();
 

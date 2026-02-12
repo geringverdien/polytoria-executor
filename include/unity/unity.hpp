@@ -1,3 +1,12 @@
+/**
+ * @file unity.hpp
+ * @author Original: (issuimo) , ElCapor (infosec@yu-tech.cloud), NASCeria (https://github.com/NASCeria)
+ * @brief Unity Il2cpp/Mono Wrapper
+ * @version 0.1
+ * @date 2026-02-12
+ * 
+ * CC-BY-SA 4.0 Copyright (c) 2026 @ElCapor
+ */
 #ifndef UNITY
 #define UNITY
 #ifndef UNITYRESOLVE_HPP

@@ -10,6 +10,7 @@
  */
 #include <skipsped/sped.hpp>
 
+
 void sped::main_thread()
 {
     sped::Sped& sped = sped::Sped::GetInstance();

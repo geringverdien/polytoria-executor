@@ -2,7 +2,7 @@
 #define ENVIROMENT
 
 #include <HookManager.hpp>
-#include <polytoria/polytoria.hpp>
+#include <ptoria/polytoria.hpp>
 using namespace polytoria;
 #include <unity/il2cpp.hpp>
 #include <unity/u.hpp>

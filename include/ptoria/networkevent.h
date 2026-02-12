@@ -1,0 +1,5 @@
+#ifndef NETWORKEVENT
+#define NETWORKEVENT
+
+
+#endif /* NETWORKEVENT */

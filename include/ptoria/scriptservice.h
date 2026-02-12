@@ -1,0 +1,5 @@
+#ifndef SCRIPTSERVICE
+#define SCRIPTSERVICE
+
+
+#endif /* SCRIPTSERVICE */
