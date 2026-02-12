@@ -12,7 +12,6 @@ struct NetTracer {
     
     static void InvokeServerHook(NetworkEvent* evt,NetMessage* message)
     {
-        U::ThreadAttach();
         std::cout << "[INFO] Invoking server hook for message: " << evt->GetName()->ToString() << std::endl;
 
         // InvokeServerHook(game["Hidden"]["DraggerPlace"], function(msg) print(msg:GetVector3("Position")) end)
@@ -23,7 +22,7 @@ struct NetTracer {
             {
                 closure->Call({(UO*)message});
             } else {
-                std::cout << "Closure is empty wthhh" << std::endl;
+                std::cout << "Closure is empty wthhh " << std::endl;
             }
         }
         HookManager::Call(InvokeServerHook, evt, message);

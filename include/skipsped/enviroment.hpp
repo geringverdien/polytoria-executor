@@ -48,7 +48,8 @@ DynValue* hookinvokeserver(void*, ScriptExecutionContext* ctx, CallbackArguments
 		std::cout << "sorry not a function wowie" << std::endl;
 		return DynValue::NewString(US::New("Invalid arg, expected function..."));
 	}
-
+	// WTFF IS WRONG WITH TS ????
+	// InvokeServerHook(game["Hidden"]["DraggerPlace"], function(msg) print(msg) end)
 	NetTracer::callback = callback;
 	NetTracer::exec = ctx->GetOwnerScript();
 
