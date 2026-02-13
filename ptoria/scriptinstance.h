@@ -1,0 +1,7 @@
+#ifndef SCRIPTINSTANCE
+#define SCRIPTINSTANCE
+
+
+
+
+#endif /* SCRIPTINSTANCE */
