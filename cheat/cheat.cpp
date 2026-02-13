@@ -17,10 +17,10 @@ int main_thread()
 
     
     spdlog::info("Assembly Name: {}", assembly->name);
-    UnityClass* instanceClass = Instance::StaticClass();
+    UnityClass* instanceClass = StaticClass<Instance>();
     nasec::Assert(instanceClass != nullptr, "Failed to get Instance class");
 
-    UnityClass* gameClass = Game::StaticClass();
+    UnityClass* gameClass = StaticClass<Game>();
     nasec::Assert(gameClass != nullptr, "Failed to get Game class");
 
     spdlog::info("Instance Class Name: {}", instanceClass->name);
@@ -30,8 +30,6 @@ int main_thread()
     nasec::Assert(gameInstance != nullptr, "Failed to get Game singleton instance");
 
     spdlog::info("Game Instance Address: 0x{:016X}", reinterpret_cast<uintptr_t>(gameInstance));
-    spdlog::info("Game Instance Type: 0x{:016X}", reinterpret_cast<uintptr_t>(gameInstance->StaticClass()->GetType()));
-    spdlog::info("Downcasted Instance Class Name: {}", ((Instance*)gameInstance)->StaticClass()->name);
 
     spdlog::info("Game Instance Name: {}", gameInstance->Name()->ToString());
     spdlog::info("Game Instance Full Name: {}", gameInstance->FullName()->ToString());

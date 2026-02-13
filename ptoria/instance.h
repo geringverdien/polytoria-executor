@@ -7,7 +7,7 @@
 /**
  * @brief Base Instance class corresponding to Polytoria's "Instance"
  */
-struct Instance : public Object<"Instance", Unity::AssemblyCSharp> {
+struct Instance : public Object<Instance, "Instance", Unity::AssemblyCSharp> {
     
     UnityString* Name();
     UnityArray<Instance*>* Children();

@@ -3,7 +3,7 @@
 
 #include <ptoria/instance.h>
 
-struct BaseScript : public Instance, public Object<"BaseScript", Unity::AssemblyCSharp> {
+struct BaseScript : public Instance, public Object<BaseScript, "BaseScript", Unity::AssemblyCSharp> {
     void SetRunning(bool value);
     bool Running();
 
