@@ -14,7 +14,7 @@ struct Singleton
         static T* instance = nullptr;
         if (!instance)
         {
-            auto uf = T::StaticClass()->Get<UnityField>("singleton");
+            auto uf = StaticClass<T>()->Get<UnityField>("singleton");
             nasec::Assert(uf != nullptr, "Failed to get singleton field");
             uf->GetStaticValue(&instance);
             nasec::Assert(instance != nullptr, "Failed to get singleton instance");

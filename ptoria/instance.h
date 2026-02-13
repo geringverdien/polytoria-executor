@@ -1,28 +1,10 @@
-#ifndef INSTANCE
-#define INSTANCE
+#ifndef INSTANCE_H
+#define INSTANCE_H
 
-#include <ptoria/object.h>
-#include <unity/unity.h>
+#include <ptoria/instancebase.h>
+#include <ptoria/objectmixin.h>
 
-/**
- * @brief Base Instance class corresponding to Polytoria's "Instance"
- */
-struct Instance : public Object<Instance, "Instance", Unity::AssemblyCSharp> {
-    
-    UnityString* Name();
-    UnityArray<Instance*>* Children();
-    UnityString* FullName();
-};
+struct Instance : public InstanceBase,
+                  public ObjectMixin<Instance, "Instance", Unity::AssemblyCSharp> {};
 
-// /**
-//  * @brief Helper for creating derived Instance types
-//  */
-// template <nasec::meta::String ClassName, nasec::meta::String Assembly = Unity::AssemblyCSharp, nasec::meta::String Namespace = "*", nasec::meta::String Parent = "*">
-// struct DerivedInstance : public Instance {
-//     static auto StaticClass() -> UnityClass* {
-//         return Unity::GetClass<ClassName, Assembly, Namespace, Parent>();
-//     }
-// };
-
-
-#endif /* INSTANCE */
+#endif

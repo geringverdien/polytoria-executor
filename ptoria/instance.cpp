@@ -1,13 +1,14 @@
+#include <ptoria/instancebase.h>
 #include <ptoria/instance.h>
 
-UnityString* Instance::Name() {
+UnityString* InstanceBase::Name() {
     return Unity::GetMethod<"get_Name">(StaticClass<Instance>())->Invoke<UnityString*>(this);
 }
 
-UnityArray<Instance*>* Instance::Children() {
-    return Unity::GetMethod<"GetChildren">(StaticClass<Instance>())->Invoke<UnityArray<Instance*>*>(this);
+UnityArray<InstanceBase*>* InstanceBase::Children() {
+    return Unity::GetMethod<"GetChildren">(StaticClass<Instance>())->Invoke<UnityArray<InstanceBase*>*>(this);
 }
 
-UnityString* Instance::FullName() {
+UnityString* InstanceBase::FullName() {
     return Unity::GetMethod<"get_FullName">(StaticClass<Instance>())->Invoke<UnityString*>(this);
 }

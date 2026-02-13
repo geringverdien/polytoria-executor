@@ -1,19 +1,21 @@
-#ifndef GAME
-#define GAME
+#ifndef GAME_H
+#define GAME_H
 
-#include <ptoria/instance.h>
+#include <ptoria/instancebase.h>
+#include <ptoria/objectmixin.h>
 #include <ptoria/singleton.h>
 
-struct Game : public Instance, public Object<Game, "Game", Unity::AssemblyCSharp>, public Singleton<Game> {
-
-    UnityString *GameName();
-
+struct Game : public InstanceBase,
+              public ObjectMixin<Game, "Game", Unity::AssemblyCSharp>,
+              public Singleton<Game> {
+    UnityString* GameName();
     int GameID();
 };
 
-struct GameIO : public Instance, public Object<GameIO, "GameIO", Unity::AssemblyCSharp>, public Singleton<GameIO> {
-
+struct GameIO : public InstanceBase,
+                public ObjectMixin<GameIO, "GameIO", Unity::AssemblyCSharp>,
+                public Singleton<GameIO> {
     void SaveToFile(const char* path);
 };
 
-#endif /* GAME */
+#endif
