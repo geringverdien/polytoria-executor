@@ -17,6 +17,9 @@ using UnityGameObject = UnityType::GameObject;
 template <typename T>
 using UnityArray = UnityType::Array<T>;
 
+template <typename T>
+using UnityList = UnityType::List<T>;
+
 namespace Unity
 {
     static constexpr nasec::meta::String AssemblyCSharp = "Assembly-CSharp.dll";
