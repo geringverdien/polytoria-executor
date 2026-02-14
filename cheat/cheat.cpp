@@ -6,6 +6,7 @@
 #include <ptoria/game.h>
 #include <ptoria/scriptinstance.h>
 #include <ptoria/scriptservice.h>
+#include <mirror/hooks.h>
 
 int main_thread()
 {
@@ -45,6 +46,6 @@ int main_thread()
     ScriptService* scriptService = ScriptService::GetInstance();
     nasec::Assert(scriptService != nullptr, "Failed to get ScriptService instance");
     ScriptService::RunScript<ScriptInstance>("print(poop())");
-
+    mirror::InstallHooks();
     return 0;
 }

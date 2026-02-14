@@ -13,6 +13,7 @@ using UnityType = UnityResolve::UnityType;
 using UnityString = UnityType::String;
 using UnityObject = UnityType::Object;
 using UnityGameObject = UnityType::GameObject;
+using UnityComponent = UnityType::Component;
 
 template <typename T>
 using UnityArray = UnityType::Array<T>;
@@ -20,11 +21,15 @@ using UnityArray = UnityType::Array<T>;
 template <typename T>
 using UnityList = UnityType::List<T>;
 
+template <typename TKey, typename TValue>
+using UnityDictionary = UnityType::Dictionary<TKey, TValue>;
+
 namespace Unity
 {
     static constexpr nasec::meta::String AssemblyCSharp = "Assembly-CSharp.dll";
     static constexpr nasec::meta::String AssemblyFirstPass = "Assembly-CSharp-firstpass.dll";
     static constexpr nasec::meta::String AssemblyUnityEngine = "UnityEngine.CoreModule.dll";
+    static constexpr nasec::meta::String Mirror = "Mirror.dll";
 
     void Init();
     void ThreadAttach();
