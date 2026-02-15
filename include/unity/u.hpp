@@ -6,6 +6,7 @@
 #define ASSEMBLY_CSHARP "Assembly-CSharp.dll"
 #define ASSEMBLY_CSHARP_FIRSTPASS "Assembly-CSharp-firstpass.dll"
 #define ASSEMBLY_MIRROR "Mirror.dll"
+#define ASSEMBLY_MIRROR_COMPONENT "Mirror.Components.dll"
 
 using U = UnityResolve;
 

@@ -48,6 +48,17 @@ namespace polytoria
             return {};
         }
 
+        auto FindFirstChild(const char *name) -> Instance *
+        {
+            for(const auto& child : GetChildren()->ToVector())
+            {
+                if (child->GetName()->ToString() == name)
+                    return child;
+            }
+
+            return {};
+        }
+
         auto GetFullName() -> US *
         {
             static UM *method;
