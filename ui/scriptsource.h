@@ -16,12 +16,12 @@ public:
 public:
     static void Init();
     static void DrawTab(ScriptSourceUI::ScriptDecompileTab* tab);
+    static void OpenNewScriptDecompileTab(BaseScript *instance);
+    static bool IsTabAlreadyOpen(BaseScript *instance);
 
 private:
     static std::vector<ScriptDecompileTab> openTabs;
 
-    void OpenNewScriptDecompileTab(BaseScript *instance);
-    bool IsTabAlreadyOpen(BaseScript *instance);
 };
 
 #endif /* SCRIPTSOURCE_H */

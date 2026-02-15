@@ -9,14 +9,17 @@ std::vector<ScriptSourceUI::ScriptDecompileTab> ScriptSourceUI::openTabs;
 // +--------------------------------------------------------+
 // |                     User Interface                     |
 // +--------------------------------------------------------+
+#include <ptoria/scriptservice.h>
+#include <core/filesys.h>
 
 void ScriptSourceUI::DrawTab(ScriptDecompileTab *tab)
 {
     if (!tab->isEditorReady)
     {
-        std::string source = polytoria::ScriptService::DecompileScript(tab->instance);
-        tab->editor.SetText(source);
-        tab->editor.SetLanguageDefinition(TextEditor::LanguageDefinitionId::Lua);
+        tab->editor = new TextEditor();
+        std::string source = ScriptService::ScriptSource(tab->instance);
+        tab->editor->SetText(source);
+        tab->editor->SetLanguageDefinition(TextEditor::LanguageDefinitionId::Lua);
         tab->isEditorReady = true;
     }
     if (ImGui::BeginMenuBar())
@@ -25,28 +28,28 @@ void ScriptSourceUI::DrawTab(ScriptDecompileTab *tab)
         {
             if (ImGui::MenuItem("Open Script..."))
             {
-                auto filters = std::vector<FileSelectFilters>{
+                auto filters = std::vector<filesys::FileSelectFilters>{
                     {"Lua Scripts", "lua"},
                     {"Text Files", "txt"},
                 };
-                auto result = OpenDialog(filters);
+                auto result = filesys::OpenDialog(filters);
                 if (result)
                 {
-                    std::string scriptContent = ReadFileAsString(*result).value_or("");
-                    tab->editor.SetText(scriptContent);
+                    std::string scriptContent = filesys::ReadFileAsString(*result).value_or("");
+                    tab->editor->SetText(scriptContent);
                 }
             }
             if (ImGui::MenuItem("Save Script..."))
             {
-                auto filters = std::vector<FileSelectFilters>{
+                auto filters = std::vector<filesys::FileSelectFilters>{
                     {"Lua Scripts", "lua"},
                     {"Text Files", "txt"},
                 };
-                auto result = SaveDialog(filters);
+                auto result = filesys::SaveDialog(filters);
                 if (result)
                 {
-                    std::string scriptContent = tab->editor.GetText();
-                    WriteStringToFile(*result, scriptContent);
+                    std::string scriptContent = tab->editor->GetText();
+                    filesys::WriteStringToFile(*result, scriptContent);
                 }
             }
 
@@ -57,9 +60,9 @@ void ScriptSourceUI::DrawTab(ScriptDecompileTab *tab)
 
     if (tab->instance)
     {
-        ImGui::Text(("Script Name: " + tab->instance->GetName()->ToString()).c_str());
-        ImGui::Text(("Running: " + std::string(tab->instance->IsRunning() ? "Yes" : "No")).c_str());
-        ImGui::Text("Requested Run: %s", tab->instance->GetRequestedRun() ? "Yes" : "No");
+        ImGui::Text(("Script Name: " + tab->instance->Name()->ToString()).c_str());
+        ImGui::Text(("Running: " + std::string(tab->instance->Running() ? "Yes" : "No")).c_str());
+        ImGui::Text("Requested Run: %s", tab->instance->RequestedRun() ? "Yes" : "No");
     }
     ImGui::Text("[WARNING] Can't save script to game yet idk why it doesnt work");
     if (ImGui::Button("Save Changes To Game"))
@@ -71,19 +74,19 @@ void ScriptSourceUI::DrawTab(ScriptDecompileTab *tab)
                 std::cout << "Editor not ready, cannot save changes" << std::endl;
                 return;
             }
-            if (tab->instance->IsRunning())
+            if (tab->instance->Running())
             {
                 tab->instance->SetRunning(false);
             }
 
-            std::string updatedSource = tab->editor.GetText();
-            tab->instance->SetSource(US::New(updatedSource));
+            std::string updatedSource = tab->editor->GetText();
+            tab->instance->SetSource(UnityString::New(updatedSource));
             //polytoria::ScriptService::RunScript(tab->instance);
 
         }
     }
     ImGui::Separator();
-    tab->editor.Render(("Decompiled Script: " + tab->instance->GetName()->ToString()).c_str());
+    tab->editor->Render(("Decompiled Script: " + tab->instance->Name()->ToString()).c_str());
 }
 
 bool ScriptSourceUI::IsTabAlreadyOpen(BaseScript *instance)

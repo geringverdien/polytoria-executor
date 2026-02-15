@@ -6,17 +6,16 @@
 // +--------------------------------------------------------+
 Instance *ExplorerUI::selectedInstance = nullptr;
 
-
-
 // +--------------------------------------------------------+
 // |                       Functions                        |
 // +--------------------------------------------------------+
-void RenderInstanceTree(Instance* instance);
+void RenderInstanceTree(Instance *instance);
 
 // +--------------------------------------------------------+
 // |                   Explorer Interface                   |
 // +--------------------------------------------------------+
 #include <imgui.h>
+#include <ui/scriptsource.h>
 
 void ExplorerUI::Init()
 {
@@ -32,7 +31,7 @@ void ExplorerUI::DrawTab()
 
     // Top part: Tree Explorer
     ImGui::BeginChild("TreeRegion", ImVec2(0, availableHeight * 0.6f), true);
-    RenderInstanceTree((Instance*)gameInstance);
+    RenderInstanceTree((Instance *)gameInstance);
     ImGui::EndChild();
 
     ImGui::Separator();
@@ -84,7 +83,11 @@ void ExplorerUI::DrawTab()
                     ImGui::TableSetColumnIndex(1);
                     if (ImGui::Button("View Source"))
                     {
-                       
+                        if (!ScriptSourceUI::IsTabAlreadyOpen(Unity::Cast<BaseScript>(selectedInstance)))
+                        {
+                            BaseScript *scriptInstance = Unity::Cast<BaseScript>(selectedInstance);
+                            ScriptSourceUI::OpenNewScriptDecompileTab(scriptInstance);
+                        }
                     }
                 }
             }
@@ -125,9 +128,10 @@ void ExplorerUI::DrawTab()
 // +--------------------------------------------------------+
 // |                        Helpers                         |
 // +--------------------------------------------------------+
-void RenderInstanceTree(Instance* instance)
+void RenderInstanceTree(Instance *instance)
 {
-    if (!instance) return;
+    if (!instance)
+        return;
 
     // flags to make it selectable and span the full width of the tree
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
@@ -152,7 +156,7 @@ void RenderInstanceTree(Instance* instance)
             for (auto child : children->ToVector())
             {
                 // An InstanceBase , is basically just an instance, so we can upcast
-                RenderInstanceTree((Instance*)child);
+                RenderInstanceTree((Instance *)child);
             }
         }
         ImGui::TreePop();
