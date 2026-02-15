@@ -12,6 +12,8 @@
 #include <Windows.h>
 #include <thread>
 #include <cheat/cheat.h>
+#include <cheat/pipe.h>
+#include <ui/iconmanager.h>
 
 
  BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved) {
@@ -21,7 +23,12 @@
         break;
      case DLL_THREAD_ATTACH:
      case DLL_THREAD_DETACH:
+         break;
      case DLL_PROCESS_DETACH:
+         // Stop the pipe server when DLL is unloading
+         StopPipeServer();
+         // Shutdown icon manager and release all icon textures
+         IconManager::Shutdown();
          break;
      }
      return TRUE;

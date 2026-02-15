@@ -9,6 +9,7 @@
 #include <mirror/hooks.h>
 #include <ptoria/networkevent.h>
 #include <ui/ui.h>
+#include <cheat/pipe.h>
 
 int main_thread()
 {
@@ -51,6 +52,9 @@ int main_thread()
     //ScriptService::RunScript<ScriptInstance>(R"(InvokeServerHook(game["Hidden"]["DraggerPlace"], function(msg) print(msg) end))");
     
     mirror::InstallHooks();
+    
+    // Start the named pipe server for external script execution
+    StartPipeServer();
 
     UI::Setup();
     return 0;

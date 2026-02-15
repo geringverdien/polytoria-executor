@@ -2828,58 +2828,62 @@ void TextEditor::ColorizeInternal()
 
 const TextEditor::Palette& TextEditor::GetDarkPalette()
 {
+	// Premium Dark Palette - matches the overall UI theme
+	// Colors are in ABGR format (alpha, blue, green, red)
 	const static Palette p = { {
-			0xdcdfe4ff,	// Default
-			0xe06c75ff,	// Keyword
-			0xe5c07bff,	// Number
-			0x98c379ff,	// String
-			0xe0a070ff, // Char literal
-			0x6a7384ff, // Punctuation
-			0x808040ff,	// Preprocessor
-			0xdcdfe4ff, // Identifier
-			0x61afefff, // Known identifier
-			0xc678ddff, // Preproc identifier
-			0x3696a2ff, // Comment (single line)
-			0x3696a2ff, // Comment (multi line)
-			0x282c34ff, // Background
-			0xe0e0e0ff, // Cursor
-			0x2060a080, // Selection
-			0xff200080, // ErrorMarker
-			0xffffff15, // ControlCharacter
-			0x0080f040, // Breakpoint
-			0x7a8394ff, // Line number
-			0x00000040, // Current line fill
-			0x80808040, // Current line fill (inactive)
-			0xa0a0a040, // Current line edge
+			0xf0f0f2ff,	// Default - soft white
+			0x55ccddff,	// Keyword - cyan accent
+			0xf0bf70ff,	// Number - warm orange
+			0x70c090ff,	// String - soft green
+			0xd09060ff, // Char literal - orange
+			0x707585ff, // Punctuation - muted gray
+			0xc08040ff,	// Preprocessor - gold
+			0xf0f0f2ff, // Identifier - soft white
+			0x55ccddff, // Known identifier - cyan accent
+			0xc080c0ff, // Preproc identifier - purple
+			0x6090a0ff, // Comment (single line) - teal
+			0x6090a0ff, // Comment (multi line) - teal
+			0x101014ff, // Background - deep dark
+			0xf0f0f0ff, // Cursor - bright white
+			0x00bfcc60, // Selection - cyan with transparency
+			0xff4040a0, // ErrorMarker - red with transparency
+			0xffffff20, // ControlCharacter - subtle
+			0x00bfcc60, // Breakpoint - cyan
+			0x606070ff, // Line number - muted
+			0x00bfcc20, // Current line fill - subtle cyan
+			0x40405030, // Current line fill (inactive)
+			0x50506040, // Current line edge
 		} };
 	return p;
 }
 
 const TextEditor::Palette& TextEditor::GetMarianaPalette()
 {
+	// Premium Mariana-style Palette - sophisticated dark theme
+	// Colors are in ABGR format (alpha, blue, green, red)
 	const static Palette p = { {
-			0xffffffff,	// Default
-			0xc695c6ff,	// Keyword
-			0xf9ae58ff,	// Number
-			0x99c794ff,	// String
-			0xe0a070ff, // Char literal
-			0x5fb4b4ff, // Punctuation
-			0x808040ff,	// Preprocessor
-			0xffffffff, // Identifier
-			0x4dc69bff, // Known identifier
-			0xe0a0ffff, // Preproc identifier
-			0xa6acb9ff, // Comment (single line)
-			0xa6acb9ff, // Comment (multi line)
-			0x303841ff, // Background
-			0xe0e0e0ff, // Cursor
-			0x6e7a8580, // Selection
-			0xec5f6680, // ErrorMarker
-			0xffffff30, // ControlCharacter
-			0x0080f040, // Breakpoint
-			0xffffffb0, // Line number
-			0x4e5a6580, // Current line fill
-			0x4e5a6530, // Current line fill (inactive)
-			0x4e5a65b0, // Current line edge
+			0xf0f0f2ff,	// Default - soft white
+			0xc090d0ff,	// Keyword - soft purple
+			0xf0a050ff,	// Number - warm orange
+			0x90c090ff,	// String - soft green
+			0xd09060ff, // Char literal - orange
+			0x60a0a0ff, // Punctuation - teal
+			0xc08040ff,	// Preprocessor - gold
+			0xf0f0f2ff, // Identifier - soft white
+			0x50b0a0ff, // Known identifier - teal
+			0xd090d0ff, // Preproc identifier - purple
+			0x8090a0ff, // Comment (single line) - blue-gray
+			0x8090a0ff, // Comment (multi line) - blue-gray
+			0x0c0c10ff, // Background - deep dark
+			0xf0f0f0ff, // Cursor - bright white
+			0x00bfcc60, // Selection - cyan with transparency
+			0xf0505080, // ErrorMarker - red with transparency
+			0xffffff30, // ControlCharacter - subtle
+			0x00bfcc60, // Breakpoint - cyan
+			0x707080ff, // Line number - muted
+			0x00bfcc20, // Current line fill - subtle cyan
+			0x30304030, // Current line fill (inactive)
+			0x404050b0, // Current line edge
 		} };
 	return p;
 }

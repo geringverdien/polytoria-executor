@@ -3118,6 +3118,57 @@ public:
 			}
 		};
 
+		// CursorLockMode enum matching Unity's CursorLockMode
+		enum class CursorLockMode : int {
+			None = 0,
+			Locked = 1,
+			Confined = 2
+		};
+
+		struct Cursor {
+			// Get cursor visibility
+			static auto get_visible() -> bool {
+				static Method* method;
+				if (!method) method = Get("UnityEngine.CoreModule.dll")->Get("Cursor")->Get<Method>("get_visible");
+				if (method) return method->Invoke<bool>();
+				return true;
+			}
+
+			// Set cursor visibility
+			static auto set_visible(bool visible) -> void {
+				static Method* method;
+				if (!method) method = Get("UnityEngine.CoreModule.dll")->Get("Cursor")->Get<Method>("set_visible");
+				if (method) return method->Invoke<void>(visible);
+			}
+
+			// Get cursor lock state
+			static auto get_lockState() -> CursorLockMode {
+				static Method* method;
+				if (!method) method = Get("UnityEngine.CoreModule.dll")->Get("Cursor")->Get<Method>("get_lockState");
+				if (method) return method->Invoke<CursorLockMode>();
+				return CursorLockMode::None;
+			}
+
+			// Set cursor lock state
+			static auto set_lockState(CursorLockMode mode) -> void {
+				static Method* method;
+				if (!method) method = Get("UnityEngine.CoreModule.dll")->Get("Cursor")->Get<Method>("set_lockState");
+				if (method) return method->Invoke<void>(mode);
+			}
+
+			// Convenience: Unlock and show cursor
+			static auto ShowAndUnlock() -> void {
+				set_visible(true);
+				set_lockState(CursorLockMode::None);
+			}
+
+			// Convenience: Lock and hide cursor (for FPS games)
+			static auto HideAndLock() -> void {
+				set_visible(false);
+				set_lockState(CursorLockMode::Locked);
+			}
+		};
+
 		template <typename Return, typename... Args>
 		static auto Invoke(void* address, Args... args) -> Return {
 #if WINDOWS_MODE

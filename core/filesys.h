@@ -15,6 +15,8 @@ namespace filesys {
         
         std::optional<std::string> ReadFileAsString(const std::string &filePath);
         void WriteStringToFile(const std::string &filePath, const std::string &content);
+
+        void OpenUrlInBrowser(const std::string &url);
 }
 
 #endif /* FILESYSTEM_H */

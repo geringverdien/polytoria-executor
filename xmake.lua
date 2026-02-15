@@ -12,6 +12,10 @@ target("wowiezz")
     add_packages("spdlog", "microsoft-detours", "d3d11", "imgui", "boost", "nativefiledialog-extended")
     add_links("user32", "dbghelp", "d3d11")
 
+    after_build(function(target)
+        os.cp("/fonts", target:targetdir())
+    end)
+
 target("injector")
     set_kind("binary")
     set_languages("c++20")

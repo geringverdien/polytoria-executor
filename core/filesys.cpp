@@ -108,3 +108,9 @@ void filesys::WriteStringToFile(const std::string &filePath, const std::string &
         std::cerr << "Failed to write to file: " << filePath << std::endl;
     }
 }
+
+void filesys::OpenUrlInBrowser(const std::string &url)
+{
+    std::string command = "start " + url;
+    system(command.c_str());
+}
