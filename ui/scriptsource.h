@@ -18,9 +18,8 @@ public:
     static void DrawTab(ScriptSourceUI::ScriptDecompileTab* tab);
     static void OpenNewScriptDecompileTab(BaseScript *instance);
     static bool IsTabAlreadyOpen(BaseScript *instance);
-
-private:
     static std::vector<ScriptDecompileTab> openTabs;
+
 
 };
 

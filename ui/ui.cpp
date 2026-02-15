@@ -144,6 +144,7 @@ HRESULT HookPresent(IDXGISwapChain* swap, UINT swapInterval, UINT flags)
 #include <ui/explorer.h>
 #include <ui/saveinstance.h>
 #include <ui/executor.h>
+#include <ui/scriptsource.h>
 
 void UI::DrawWaitingScreen()
 {
@@ -175,6 +176,20 @@ void UI::DrawMainUI()
             ExecutorUI::DrawTab();
             ImGui::EndTabItem();
         }
+        for (auto it = ScriptSourceUI::openTabs.begin(); it != ScriptSourceUI::openTabs.end();)
+            {
+                bool isOpen = true;
+                if (ImGui::BeginTabItem(("Decompile: " + it->instance->Name()->ToString()).c_str(), &isOpen))
+                {
+                    ScriptSourceUI::DrawTab(&(*it));
+                    ImGui::EndTabItem();
+                }
+
+                if (!isOpen)
+                    it = ScriptSourceUI::openTabs.erase(it);
+                else
+                    ++it;
+            }
         ImGui::EndTabBar();
     }
     ImGui::End();
