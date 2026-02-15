@@ -13,6 +13,10 @@ struct InstanceBase {
 };
 
 struct Instance : public InstanceBase,
-                  public Object<Instance, "Instance", Unity::AssemblyCSharp> {};
+                  public Object<Instance, "Instance", Unity::AssemblyCSharp> {
+
+        
+
+};
 
 #endif /* INSTANCE */

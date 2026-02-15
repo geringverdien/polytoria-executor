@@ -128,6 +128,18 @@ namespace Unity
         auto field = GetField<Name, Types...>(klass);
         field->SetStaticValue(value);
     }
+
+
+    template <typename T>
+    T* Cast(void* obj) {
+        return reinterpret_cast<T*>(obj);
+    }
+
+    template <typename T>
+    UnityObject* CastToUnityObject(T* obj) {
+        return reinterpret_cast<UnityObject*>(obj);
+    }
+
 }
 
 #endif /* UNITY_H */
