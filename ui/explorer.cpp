@@ -5,6 +5,8 @@
 #include <imgui.h>
 #include <ui/scriptsource.h>
 #include <unity/unity.h>
+#include <unordered_map>
+#include <mutex>
 
 // +--------------------------------------------------------+
 // |                       Variables                        |
@@ -13,21 +15,116 @@ Instance *ExplorerUI::selectedInstance = nullptr;
 static float explorerSplitRatio = 0.55f; // Default ratio for tree/properties split
 
 // +--------------------------------------------------------+
+// |                   Performance Cache                    |
+// +--------------------------------------------------------+
+namespace ExplorerCache
+{
+    // Cache for instance metadata to avoid repeated Unity API calls
+    struct InstanceCache
+    {
+        std::string name;
+        std::string className;
+        std::string fullName;
+        bool isPopulated = false;
+    };
+    
+    static std::unordered_map<Instance*, InstanceCache> s_cache;
+    static std::mutex s_cacheMutex;
+    
+    // Get or create cache entry for an instance
+    InstanceCache& GetCache(Instance* instance)
+    {
+        std::lock_guard<std::mutex> lock(s_cacheMutex);
+        auto it = s_cache.find(instance);
+        if (it != s_cache.end())
+        {
+            return it->second;
+        }
+        
+        // Create new entry
+        auto& cache = s_cache[instance];
+        cache.isPopulated = false;
+        return cache;
+    }
+    
+    // Populate cache entry (called once per instance)
+    void PopulateCache(Instance* instance, InstanceCache& cache)
+    {
+        if (cache.isPopulated)
+            return;
+            
+        // Get name
+        auto nameStr = instance->Name();
+        if (nameStr)
+            cache.name = nameStr->ToString();
+        else
+            cache.name = "Unknown";
+        
+        // Get type info
+        auto instanceObject = Unity::CastToUnityObject(instance);
+        if (instanceObject)
+        {
+            auto type = instanceObject->GetType();
+            if (type)
+            {
+                std::string fullName = type->GetFullNameOrDefault()->ToString();
+                cache.fullName = fullName;
+                
+                // Extract class name from full name
+                size_t lastDot = fullName.find_last_of('.');
+                if (lastDot != std::string::npos && lastDot + 1 < fullName.length())
+                    cache.className = fullName.substr(lastDot + 1);
+                else
+                    cache.className = fullName;
+            }
+        }
+        
+        cache.isPopulated = true;
+    }
+    
+    // Clear cache (call when hierarchy might have changed)
+    void ClearCache()
+    {
+        std::lock_guard<std::mutex> lock(s_cacheMutex);
+        s_cache.clear();
+    }
+    
+    // Remove specific instance from cache
+    void RemoveFromCache(Instance* instance)
+    {
+        std::lock_guard<std::mutex> lock(s_cacheMutex);
+        s_cache.erase(instance);
+    }
+    
+    // Get cached name (populates if needed)
+    const std::string& GetName(Instance* instance)
+    {
+        auto& cache = GetCache(instance);
+        PopulateCache(instance, cache);
+        return cache.name;
+    }
+    
+    // Get cached class name (populates if needed)
+    const std::string& GetClassName(Instance* instance)
+    {
+        auto& cache = GetCache(instance);
+        PopulateCache(instance, cache);
+        return cache.className;
+    }
+    
+    // Get cached full name (populates if needed)
+    const std::string& GetFullName(Instance* instance)
+    {
+        auto& cache = GetCache(instance);
+        PopulateCache(instance, cache);
+        return cache.fullName;
+    }
+}
+
+// +--------------------------------------------------------+
 // |                       Functions                        |
 // +--------------------------------------------------------+
 void RenderInstanceTree(Instance *instance);
-
-// Helper function to extract class name from full type name
-// e.g., "Polytoria.Datamodel.LocalScript" -> "LocalScript"
-static std::string GetClassNameFromFullName(const std::string& fullName)
-{
-    size_t lastDot = fullName.find_last_of('.');
-    if (lastDot != std::string::npos && lastDot + 1 < fullName.length())
-    {
-        return fullName.substr(lastDot + 1);
-    }
-    return fullName;
-}
 
 // Helper function to draw a vertical splitter
 static bool VerticalSplitter(float* ratio, float minRatio = 0.2f, float maxRatio = 0.8f)
@@ -70,6 +167,8 @@ static bool VerticalSplitter(float* ratio, float minRatio = 0.2f, float maxRatio
 
 void ExplorerUI::Init()
 {
+    // Clear cache on init
+    ExplorerCache::ClearCache();
 }
 
 void ExplorerUI::DrawTab()
@@ -112,6 +211,14 @@ void ExplorerUI::DrawTab()
     ImGui::Separator();
     ImGui::Spacing();
     
+    // Refresh button to manually clear cache
+    ImGui::SameLine(ImGui::GetContentRegionAvail().x - 80);
+    if (ImGui::SmallButton("Refresh"))
+    {
+        ExplorerCache::ClearCache();
+    }
+    ImGui::Spacing();
+    
     RenderInstanceTree((Instance *)gameInstance);
     ImGui::EndChild();
     
@@ -135,6 +242,9 @@ void ExplorerUI::DrawTab()
     
     if (selectedInstance)
     {
+        // Use cached name
+        const std::string& nameStr = ExplorerCache::GetName(selectedInstance);
+        
         // Properties header with gold accent
         if (PremiumStyle::IsPremiumEnabled)
         {
@@ -142,7 +252,7 @@ void ExplorerUI::DrawTab()
             if (PremiumStyle::FontBold)
                 ImGui::PushFont(PremiumStyle::FontBold);
         }
-        ImGui::Text("Properties: %s", selectedInstance->Name()->ToString().c_str());
+        ImGui::Text("Properties: %s", nameStr.c_str());
         if (PremiumStyle::IsPremiumEnabled)
         {
             if (PremiumStyle::FontBold)
@@ -163,7 +273,7 @@ void ExplorerUI::DrawTab()
             ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
             ImGui::TableHeadersRow();
 
-            // Name
+            // Name - use cached value
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             if (PremiumStyle::IsPremiumEnabled)
@@ -171,7 +281,6 @@ void ExplorerUI::DrawTab()
             else
                 ImGui::Text("Name");
             ImGui::TableSetColumnIndex(1);
-            std::string nameStr = selectedInstance->Name()->ToString();
             if (PremiumStyle::IsPremiumEnabled)
             {
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.94f, 0.95f, 0.96f, 1.00f));
@@ -187,54 +296,49 @@ void ExplorerUI::DrawTab()
                     ImGui::SetClipboardText(nameStr.c_str());
             }
 
-            // Type
-            auto selectedInstanceObject = Unity::CastToUnityObject(selectedInstance);
-            auto type = selectedInstanceObject->GetType();
-            if (type)
+            // Class - use cached value
+            const std::string& classStr = ExplorerCache::GetFullName(selectedInstance);
+            const std::string& className = ExplorerCache::GetClassName(selectedInstance);
+            
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            if (PremiumStyle::IsPremiumEnabled)
+                ImGui::TextColored(ImVec4(0.70f, 0.70f, 0.75f, 1.00f), "Class");
+            else
+                ImGui::Text("Class");
+            ImGui::TableSetColumnIndex(1);
+            if (PremiumStyle::IsPremiumEnabled)
+            {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.00f, 0.75f, 0.85f, 1.00f));
+                if (ImGui::Selectable(classStr.c_str()))
+                    ImGui::SetClipboardText(classStr.c_str());
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("Click to copy: %s", classStr.c_str());
+                ImGui::PopStyleColor();
+            }
+            else
+            {
+                if (ImGui::Selectable(classStr.c_str()))
+                    ImGui::SetClipboardText(classStr.c_str());
+            }
+
+            // Script Source button for script types
+            if (className == "LocalScript" || className == "Script" || 
+                className == "ModuleScript" || className == "ScriptInstance")
             {
                 ImGui::TableNextRow();
                 ImGui::TableSetColumnIndex(0);
                 if (PremiumStyle::IsPremiumEnabled)
-                    ImGui::TextColored(ImVec4(0.70f, 0.70f, 0.75f, 1.00f), "Class");
+                    ImGui::TextColored(ImVec4(0.70f, 0.70f, 0.75f, 1.00f), "Script Source");
                 else
-                    ImGui::Text("Class");
+                    ImGui::Text("Script Source");
                 ImGui::TableSetColumnIndex(1);
-                std::string classStr = type->GetFullNameOrDefault()->ToString();
-                if (PremiumStyle::IsPremiumEnabled)
+                if (PremiumStyle::StyledButton("View Source", true, ImVec2(100, 0)))
                 {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.00f, 0.75f, 0.85f, 1.00f));
-                    if (ImGui::Selectable(classStr.c_str()))
-                        ImGui::SetClipboardText(classStr.c_str());
-                    if (ImGui::IsItemHovered())
-                        ImGui::SetTooltip("Click to copy: %s", classStr.c_str());
-                    ImGui::PopStyleColor();
-                }
-                else
-                {
-                    if (ImGui::Selectable(classStr.c_str()))
-                        ImGui::SetClipboardText(classStr.c_str());
-                }
-
-                // Script Source button for script types
-                if (type->GetFullNameOrDefault()->ToString() == "Polytoria.Datamodel.LocalScript" || 
-                    type->GetFullNameOrDefault()->ToString() == "Polytoria.Datamodel.Script" || 
-                    type->GetFullNameOrDefault()->ToString() == "Polytoria.Datamodel.ModuleScript" || 
-                    type->GetFullNameOrDefault()->ToString() == "Polytoria.Datamodel.ScriptInstance")
-                {
-                    ImGui::TableNextRow();
-                    ImGui::TableSetColumnIndex(0);
-                    if (PremiumStyle::IsPremiumEnabled)
-                        ImGui::TextColored(ImVec4(0.70f, 0.70f, 0.75f, 1.00f), "Script Source");
-                    else
-                        ImGui::Text("Script Source");
-                    ImGui::TableSetColumnIndex(1);
-                    if (PremiumStyle::StyledButton("View Source", true, ImVec2(100, 0)))
+                    if (!ScriptSourceUI::IsTabAlreadyOpen(Unity::Cast<BaseScript>(selectedInstance)))
                     {
-                        if (!ScriptSourceUI::IsTabAlreadyOpen(Unity::Cast<BaseScript>(selectedInstance)))
-                        {
-                            BaseScript *scriptInstance = Unity::Cast<BaseScript>(selectedInstance);
-                            ScriptSourceUI::OpenNewScriptDecompileTab(scriptInstance);
-                        }
+                        BaseScript *scriptInstance = Unity::Cast<BaseScript>(selectedInstance);
+                        ScriptSourceUI::OpenNewScriptDecompileTab(scriptInstance);
                     }
                 }
             }
@@ -264,7 +368,8 @@ void ExplorerUI::DrawTab()
                     ImGui::SetClipboardText(addrBuf);
             }
 
-            // Full Name
+            // Full Name - use cached value
+            const std::string& fullNameStr = ExplorerCache::GetFullName(selectedInstance);
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             if (PremiumStyle::IsPremiumEnabled)
@@ -272,7 +377,6 @@ void ExplorerUI::DrawTab()
             else
                 ImGui::Text("Full Name");
             ImGui::TableSetColumnIndex(1);
-            std::string fullNameStr = selectedInstance->FullName()->ToString();
             if (PremiumStyle::IsPremiumEnabled)
             {
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.94f, 0.95f, 0.96f, 1.00f));
@@ -324,6 +428,7 @@ void RenderInstanceTree(Instance *instance)
     if (PremiumStyle::IsPremiumEnabled)
         flags |= ImGuiTreeNodeFlags_FramePadding;
 
+    // Get children - use direct array access instead of ToVector()
     auto children = instance->Children();
     bool hasChildren = children && children->max_length > 0;
 
@@ -339,34 +444,25 @@ void RenderInstanceTree(Instance *instance)
         ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.00f, 0.75f, 0.85f, 0.60f));
     }
 
-    // Get class name for icon lookup
-    std::string className;
-    auto instanceObject = Unity::CastToUnityObject(instance);
-    if (instanceObject)
-    {
-        auto type = instanceObject->GetType();
-        if (type)
-        {
-            std::string fullName = type->GetFullNameOrDefault()->ToString();
-            className = GetClassNameFromFullName(fullName);
-        }
-    }
+    // Use cached class name for icon lookup
+    const std::string& className = ExplorerCache::GetClassName(instance);
 
     // Draw icon before tree node if available
-    float iconSize = 24.0f;  // Larger icon size for better visibility
+    float iconSize = 24.0f;
     bool hasIcon = false;
     if (IconManager::IsInitialized() && !className.empty())
     {
-        // Try to draw the icon for this class
         ImVec2 size(iconSize, iconSize);
         if (IconManager::DrawIcon(className.c_str(), size))
         {
             hasIcon = true;
-            ImGui::SameLine(0.0f, 6.0f); // Gap between icon and tree node
+            ImGui::SameLine(0.0f, 6.0f);
         }
     }
 
-    bool opened = ImGui::TreeNodeEx(instance, flags, "%s", instance->Name()->ToString().c_str());
+    // Use cached name
+    const std::string& nameStr = ExplorerCache::GetName(instance);
+    bool opened = ImGui::TreeNodeEx(instance, flags, "%s", nameStr.c_str());
 
     if (isSelected && PremiumStyle::IsPremiumEnabled)
     {
@@ -384,10 +480,17 @@ void RenderInstanceTree(Instance *instance)
         {
             if (PremiumStyle::IsPremiumEnabled)
                 ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 20.0f);
-            for (auto child : children->ToVector())
+            
+            // OPTIMIZATION: Iterate directly over array instead of ToVector()
+            for (int i = 0; i < children->max_length; i++)
             {
-                RenderInstanceTree((Instance *)child);
+                Instance* child = (Instance*)children->At(i);
+                if (child)
+                {
+                    RenderInstanceTree(child);
+                }
             }
+            
             if (PremiumStyle::IsPremiumEnabled)
                 ImGui::PopStyleVar();
         }
