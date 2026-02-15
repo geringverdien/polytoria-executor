@@ -14,6 +14,8 @@ using UnityString = UnityType::String;
 using UnityObject = UnityType::Object;
 using UnityGameObject = UnityType::GameObject;
 using UnityComponent = UnityType::Component;
+using UnityCursor = UnityType::Cursor;
+using UnityCursorLockMode = UnityType::CursorLockMode;
 
 template <typename T>
 using UnityArray = UnityType::Array<T>;

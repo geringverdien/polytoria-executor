@@ -51,32 +51,84 @@ void UI::Draw()
 // +--------------------------------------------------------+
 WNDPROC oWndProc = nullptr;
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+// Track previous cursor state to restore when UI closes
+static bool s_WasCursorVisible = true;
+static UnityResolve::UnityType::CursorLockMode s_PreviousLockState = UnityResolve::UnityType::CursorLockMode::None;
+static bool s_CursorStateSaved = false;
+
+// Save and restore cursor state
+static void SaveCursorState()
+{
+    if (!s_CursorStateSaved)
+    {
+        s_WasCursorVisible = UnityResolve::UnityType::Cursor::get_visible();
+        s_PreviousLockState = UnityResolve::UnityType::Cursor::get_lockState();
+        s_CursorStateSaved = true;
+    }
+}
+
+static void RestoreCursorState()
+{
+    if (s_CursorStateSaved)
+    {
+        UnityResolve::UnityType::Cursor::set_visible(s_WasCursorVisible);
+        UnityResolve::UnityType::Cursor::set_lockState(s_PreviousLockState);
+        s_CursorStateSaved = false;
+    }
+}
+
+static void ForceShowCursor()
+{
+    UnityResolve::UnityType::Cursor::ShowAndUnlock();
+}
+
 LRESULT __stdcall WndProcHook(const HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    // Handle UI toggle keybind
     if (uMsg == WM_KEYDOWN && wParam == UI::keybind) {
 		if (UI::state == UI::Ready) {
+            // Closing UI - restore cursor state
+            RestoreCursorState();
             UI::state = UI::Closed;
         } else if (UI::state == UI::Closed) 
         {
+            // Opening UI - save state and force show cursor
+            SaveCursorState();
+            ForceShowCursor();
             UI::state = UI::Ready;
         }
 	}
 
+    // Let ImGui process the message first
 	if (ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam))
 		return true;
 
+    // Block all input when UI is open
 	if (UI::state == UI::Ready) {
-
-		// Block mouse input
+		// Block standard mouse input (WM_MOUSEMOVE, WM_LBUTTONDOWN, etc.)
 		if (uMsg >= WM_MOUSEFIRST && uMsg <= WM_MOUSELAST)
 			return true;
 
-        // Need to fix this, it doesn't seem to work well, have to look into unity to block really everything
+        // Block mouse scroll wheel
 		if (uMsg == WM_MOUSEWHEEL || uMsg == WM_MOUSEHWHEEL)
+			return true;
+
+        // Block Raw Input (WM_INPUT) - Unity uses this for mouse/keyboard
+        // This is the key fix for scroll wheel still reaching the game
+		if (uMsg == WM_INPUT)
 			return true;
 
 		// Block keyboard input
 		if (uMsg >= WM_KEYFIRST && uMsg <= WM_KEYLAST)
 			return true;
+        
+        // Block mouse activate (prevents game from regaining focus)
+        if (uMsg == WM_MOUSEACTIVATE)
+            return true;
+            
+        // Block capture changes
+        if (uMsg == WM_CAPTURECHANGED)
+            return true;
 	}
 
 	return CallWindowProc(oWndProc, hWnd, uMsg, wParam, lParam);
