@@ -20,10 +20,21 @@ int main_thread()
     //NetworkEvent::InstallHooks();
     Unity::Init();
     Unity::ThreadAttach();
-    UI::state = UI::UiState::Ready;
 
     UnityAssembly* assembly = Unity::GetAssembly<Unity::AssemblyCSharp>();
 
+
+    // We gotta wait for game to be started !
+    void* game = Unity::GetMethod<"get_Instance">(StaticClass<Game>())->Invoke<void*>();
+    if (!game) {
+        spdlog::info("Waiting for game instance...");
+        while (!game) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            game = Unity::GetMethod<"get_Instance">(StaticClass<Game>())->Invoke<void*>();
+        }
+    }
+
+    UI::state = UI::UiState::Ready;
     
     spdlog::info("Assembly Name: {}", assembly->name);
     UnityClass* instanceClass = StaticClass<Instance>();

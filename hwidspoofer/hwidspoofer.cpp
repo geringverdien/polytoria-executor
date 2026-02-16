@@ -87,6 +87,14 @@ UnityString*GetDeviceUniqueID_Hook()
         init = true;
     }
     UnityString*originalID = HookManager::Call(GetDeviceUniqueID_Hook);
+    if (!originalID) {
+        // we might be in a vm
+        return UnityString::New(scramble("9dafafc41f9790ff32f5e65ef03c503b97d8fdb3"));
+    } else if (originalID->ToString() == "")
+    {
+        return UnityString::New(scramble("9dafafc41f9790ff32f5e65ef03c503b97d8fdb3"));
+    }
+    
     std::string originalIDStr = originalID->ToString();
     std::string scrambledID = scramble(originalIDStr);
     UnityString* fakeID = UnityString::New(scrambledID);
