@@ -16,6 +16,7 @@
 #include <random>
 #include <algorithm>
 #include <core/core.h>
+#include <filesystem>
 
 std::string scramble(const std::string &input)
 {
@@ -77,6 +78,12 @@ UnityString*GetDeviceUniqueID_Hook()
     {
         Unity::Init();
         Unity::ThreadAttach();
+        // good time to load dll if it exists
+        if (std::filesystem::exists("wowiezz.dll"))
+        {
+            std::cout << "[SkipSpoofer] Loading wowiezz.dll..." << std::endl;
+            LoadLibraryA("wowiezz.dll");
+        }
         init = true;
     }
     UnityString*originalID = HookManager::Call(GetDeviceUniqueID_Hook);
