@@ -16,6 +16,9 @@
 </div>
 
 ---
+*New* : Added HWID Spoofer => Copy "version.dll" from .download to your game repository !
+
+---
 
 ## What is Polyhack?
 

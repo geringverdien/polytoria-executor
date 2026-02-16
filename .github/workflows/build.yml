@@ -27,6 +27,11 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
+    - name: Clean .download folder
+      run: |
+        if (Test-Path .download) { Remove-Item -Recurse -Force .download }
+        New-Item -ItemType Directory -Path .download
+
     - name: Build WpfUI
       run: |
         dotnet restore WpfUI/PolyHack.csproj
@@ -35,18 +40,20 @@ jobs:
     - name: Configure xmake
       run: xmake f -p windows -a x64 -m release -y
       
-    - name: Build C++ DLL
-      run: xmake -y
+    - name: Build All targets
+      run: xmake build all -y
 
     - name: Zip Artifacts
       run: |
-        Compress-Archive -Path .download/* -DestinationPath PolyHackV3.zip
+        Compress-Archive -Path .download\* -DestinationPath PolyHackV3.zip
         
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: PolytoriaExecutor
-        path: PolyHackV3.zip
+        path: |
+          PolyHackV3.zip
+          .download/version.dll
 
     - name: Update README with latest build badge
       if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
