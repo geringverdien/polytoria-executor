@@ -1,6 +1,6 @@
-#include <polytoria/networking/mirror_hook.hpp>
-#include <polytoria/networking/network_stream.hpp>
-#include <polytoria/networking/deserializer_core.hpp>
+#include <ptoria/networking/mirror_hook.hpp>
+#include <ptoria/networking/network_stream.hpp>
+#include <ptoria/networking/deserializer_core.hpp>
 #include <unity/u.hpp>
 
 using namespace mirror;

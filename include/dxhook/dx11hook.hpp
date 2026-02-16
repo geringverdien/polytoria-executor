@@ -1,11 +1,13 @@
-//
-// @project     sdk-explorer
-//
-// @author      ElCapor
-//
-// @license     CC BY-NC-SA 4.0
-//
-
+/**
+ * @file dx11hook.hpp
+ * @author ElCapor (infosec@yu-tech.cloud)
+ * @brief Direct X 11 Hooking Library
+ * @version 0.1
+ * @date 2026-02-12
+ * 
+ * CC-BY-SA 4.0 Copyright (c) 2026 @ElCapor
+ * 
+ */
 #pragma once
 
 #include <d3d11.h>

@@ -1,6 +1,6 @@
-#include <polytoria/networking/deserializer_core.hpp>
-#include <polytoria/networking/messages/network_message.hpp>
-#include <polytoria/networking/messages/command_message.hpp>
+#include <ptoria/networking/deserializer_core.hpp>
+#include <ptoria/networking/messages/network_message.hpp>
+#include <ptoria/networking/messages/command_message.hpp>
 
 using namespace mirror;
 
