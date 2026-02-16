@@ -37,6 +37,8 @@ Or from the latest github actions : [https://github.com/ElCapor/polytoria-execut
 
 You can open polyhack.exe for the normal executor, or injector.exe if you only need the internal UI.
 
+![alt text](executor.png)
+
 
 ## Community
 
