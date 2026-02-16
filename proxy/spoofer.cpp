@@ -18,31 +18,27 @@ std::string scramble(const std::string& input) {
 
 US* GetDeviceUniqueIdentifier()
 {
-    US* deviceId = HookManager::Call(GetDeviceUniqueIdentifier);
-    std::string sDeviceId = deviceId->ToString();
-
-    mod::ToriaFile config;
-    config.load("hwid.toria");
-
-    if (auto savedHwid = config.get("hwid")) {
-        std::cout << "[GetDeviceUniqueIdentifier] Returning saved HWID: " << *savedHwid << std::endl;
-        return US::New(*savedHwid);
-    }
-
-    std::cout << "[GetDeviceUniqueIdentifier] No saved HWID found. Original: " << sDeviceId << std::endl;
-    std::string scrambledDeviceId = scramble(sDeviceId);
-    
-    config.set("hwid", scrambledDeviceId);
-    config.save("hwid.toria");
-
-    std::cout << "[GetDeviceUniqueIdentifier] Scrambled and saved new HWID: " << scrambledDeviceId << std::endl;
-    return US::New(scrambledDeviceId);
+    return US::New(scramble("9dafafc41f9790ff32f5e65ef03c503b97d80db3"));
 }
 
 void GameStartHook(void* __this)
 {
     std::cout << "[Game.Start] Game.Start method called" << std::endl;
     HookManager::Call(GameStartHook, __this);
+
+    std::thread([__this]() {
+        Sleep(500);
+        std::cout << "[Game.Start] Performing post-start actions" << std::endl;
+        // Add any additional actions you want to perform after the game starts here
+
+        for (int i = 0; i < 5; i++) {
+            std::cout << "[Game.Start] Post-start action " << (i + 1) << std::endl;
+            Sleep(1000);
+
+        }
+
+        std::cout << "[Game.Start] Final HWID: " << HookManager::Call(GetDeviceUniqueIdentifier)->ToString() << std::endl;
+    }).detach();
     LoadLibraryA("skipsped.dll");
 }
 
