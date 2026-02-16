@@ -15,7 +15,7 @@
 #include <nfd.h>
 #include <skipsped/net_tracer.hpp>
 #include <ptoria/networking/mirror_hook.hpp>
-#include <nasec/assert.h>
+#include <ptoria/networking/messages/command_message.hpp>
 
 using namespace sped;
 
@@ -46,6 +46,8 @@ void Sped::Init()
         std::cout << "Failed to access Polytoria Game instance" << std::endl;
     }
 }
+
+static char cmdName[256] = "CmdNotifyRespawn"; // uhh temporary
 
 bool Sped::Render(IDXGISwapChain *swap, UINT swapInterval, UINT flags)
 {
@@ -97,6 +99,23 @@ bool Sped::Render(IDXGISwapChain *swap, UINT swapInterval, UINT flags)
             if (ImGui::BeginTabItem("Net Message Logger"))
             {
                 RenderNetMessageLoggerTab();
+                ImGui::EndTabItem();
+            }
+
+            if (ImGui::BeginTabItem("tastey"))
+            {
+                ImGui::InputText("##cmdname", cmdName, IM_ARRAYSIZE(cmdName));
+
+                if(ImGui::Button("Click me!"))
+                {
+                    polytoria::Game *game = polytoria::Game::GetInstance();
+                    
+                    mirror::messages::CommandMessage msg;
+                    NetworkStream stream = msg.Serialize(game->FindFirstChild("Players")->FindFirstChild("Player")->GetGameObject(), cmdName, std::vector<uint8_t>{});
+                    stream.PrintPayload();
+                    mirror::SendPacket(stream.GetData(), stream.GetWritePosition());
+
+                }
                 ImGui::EndTabItem();
             }
 

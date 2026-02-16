@@ -49,3 +49,20 @@ void mirror::InstallHooks()
     std::printf("Hooking Mirror::LocalConnectionToServer::Send at address %p\n", method->function);
     HookManager::Install((Send_t)method->function, dtSend);
 }
+
+void mirror::SendPacket(const char* data, size_t size)
+{
+    UO* connection = nullptr; // NetworkConnectionToServer
+    U::Get(ASSEMBLY_MIRROR)->Get("NetworkClient")->Get<UF>("<connection>k__BackingField")->GetStaticValue(&connection);
+
+    auto send = U::Get(ASSEMBLY_MIRROR)->Get("LocalConnectionToServer", "Mirror")->Get<UM>("Send", {"System.ArraySegment<System.Byte>", "System.Int32"});
+    UArray<uint8_t>* array = UArray<uint8_t>::New(U::Get("mscorlib.dll")->Get("Byte", "System"), size);
+    std::memcpy((void*)array->GetData(), data, size);
+
+	void* segment = calloc(1, 0xC);
+    *(uintptr_t*)segment = (uintptr_t)array;
+    *(uintptr_t*)((uintptr_t)segment + 0xC) = size;
+
+    //U::Get(ASSEMBLY_MIRROR)->Get("NetworkConnectionToServer", "Mirror")->Get<UM>("SendToTransport")->Invoke<void>(nullptr, segment, 0);
+    send->Invoke<void>(connection, segment, 0);
+}

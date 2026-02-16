@@ -120,6 +120,12 @@ public:
 			for (const auto pClass : classes) if (strClass == pClass->name && (strNamespace == "*" || pClass->namespaze == strNamespace) && (strParent == "*" || pClass->parent == strParent)) return pClass;
 			return nullptr;
 		}
+
+		[[nodiscard]] auto Get(void* klass) const -> Class* {
+
+			for (const auto pClass : classes) if (pClass->address == klass) return pClass;
+			return nullptr;
+		}
 	};
 
 	struct Type final {
@@ -668,6 +674,20 @@ public:
 
 	static auto Get(const std::string& strAssembly) -> Assembly* {
 		for (const auto pAssembly : assembly) if (pAssembly->name == strAssembly) return pAssembly;
+		return nullptr;
+	}
+
+	static auto GetClass(void* klass) -> Class* {
+		for (const auto pAssembly : assembly) {
+			for (const auto pClass : pAssembly->classes) if (pClass->address == klass) return pClass;
+		}
+		return nullptr;
+	}
+
+	static auto GetClass(const std::string& klass) -> Class* {
+		for (const auto pAssembly : assembly) {
+			for (const auto pClass : pAssembly->classes) if (pClass->name == klass) return pClass;
+		}
 		return nullptr;
 	}
 
@@ -1464,6 +1484,11 @@ public:
 				return klass;
 			}
 
+			auto GetKlass() -> void*
+			{
+				return Il2CppClass.klass;
+			}
+
 			auto GetType() -> CsType* {
 
 				static Method* method;
@@ -2159,6 +2184,12 @@ public:
 				TValue tValue = { 0 };
 				for (auto i = 0; i < iCount; i++) if (GetEntry()[i].tKey == tKey) tValue = GetEntry()[i].tValue;
 				return tValue;
+			}
+
+			auto GetKeyByValue(const TValue tValue) -> TKey {
+				TKey tKey = { 0 };
+				for (auto i = 0; i < iCount; i++) if (GetEntry()[i].tValue == tValue) tKey = GetEntry()[i].tKey;
+				return tKey;
 			}
 
 			auto operator[](const TKey tKey) const -> TValue { return GetValueByKey(tKey); }
