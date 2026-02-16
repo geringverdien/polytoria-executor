@@ -17,6 +17,7 @@
 
 namespace dx11 {
     using Present_t = HRESULT(__stdcall*)(IDXGISwapChain*, UINT, UINT);
+    using ResizeBuffers_t = HRESULT(__stdcall*)(IDXGISwapChain*, UINT, UINT, UINT, DXGI_FORMAT, UINT);
     using ImGuiDraw = void(*)();
 
     IDXGISwapChain *CreateSwapChain();
@@ -25,6 +26,8 @@ namespace dx11 {
     ID3D11Device * GetDevice();
     ID3D11DeviceContext * GetContext();
     ID3D11RenderTargetView * GetRenderTarget();
+    void SetRenderTarget(ID3D11RenderTargetView* rtv);
+    void CleanupRenderTarget();
 }
 
 
