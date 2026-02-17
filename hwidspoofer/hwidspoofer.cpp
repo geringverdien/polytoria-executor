@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <core/core.h>
 #include <filesystem>
+#include <hwidspoofer/multiclient.h>
 
 std::string scramble(const std::string &input)
 {
@@ -59,6 +60,8 @@ void spoofer::main_thread()
     // Hook LoadLibraryW to detect when GameAssembly.dll is loaded
     HookManager::Install(reinterpret_cast<HMODULE(*)(LPCWSTR)>(LoadLibraryW_addr), LoadLibraryW_Hook);
     std::cout << "[SkipSpoofer] LoadLibraryW hooked" << std::endl;
+
+    multiclient::CloseAllMutexesInCurrentProcess();
 }
 
 // +--------------------------------------------------------+
@@ -94,7 +97,7 @@ UnityString*GetDeviceUniqueID_Hook()
     {
         return UnityString::New(scramble("9dafafc41f9790ff32f5e65ef03c503b97d8fdb3"));
     }
-    
+
     std::string originalIDStr = originalID->ToString();
     std::string scrambledID = scramble(originalIDStr);
     UnityString* fakeID = UnityString::New(scrambledID);
@@ -123,4 +126,12 @@ HMODULE LoadLibraryW_Hook(LPCWSTR lpLibFileName)
     }
 
     return module;
+}
+
+//
+// Unity forces a single instance through a mutex: \Sessions\1\BaseNamedObjects\t-1-4-155-Polytoria-Client-exe-SingleInstanceMutex-Default
+//
+void ForceCloseMutex()
+{
+    const char*mutexName = "t-1-4-155-Polytoria-Client-exe-SingleInstanceMutex-Default";
 }

@@ -18,4 +18,4 @@ struct GameIO : public InstanceBase,
     void SaveToFile(const char* path);
 };
 
-#endif
+#endif /* GAME_H */
