@@ -13,7 +13,7 @@
 **Check out [PolyLauncher](https://github.com/ElCapor/PolyLauncher), our custom launcher that automatically manages the executor and HWID spoofer!**
 
  <a href = "https://github.com/ElCapor/PolyLauncher">
-  <img src ="https://github.com/ElCapor/PolyLauncher/blob/main/.github/polylauncher.png" width=250>
+  <img src ="https://github.com/ElCapor/PolyLauncher/blob/main/.github/polylauncher.png">
 </a>
 
 **A Modern Script Executor for Polytoria**
