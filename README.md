@@ -54,6 +54,8 @@ Join our discord server to chat : [https://discord.gg/NrXZmyPRvh](https://discor
 ## Features
 
 ### 🚀 Script Execution
+- **NEW** : MultiInstance - You can open multiple game instances at the same time
+- **NEW** : HWID Spoofer - Your HWID is spoofed in real-time
 - **Custom Lua Environment** - Extended Lua environment with custom functions for game manipulation
 - **loadstring()** - Dynamic code execution from strings
 - **Named Pipe Server** - Execute scripts from external tools via Windows named pipes
