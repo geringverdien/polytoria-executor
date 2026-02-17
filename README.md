@@ -1,7 +1,9 @@
 # Polyhack v3
 
 <div align="center">
-    <img src="polyhack.png">
+    <a href = "https://github.com/ElCapor/polytoria-executor">
+  <img src="https://github.com/ElCapor/polytoria-executor/blob/master/polyhack_banner.png" width=200>
+</a
 
 ![Polyhack Banner](https://img.shields.io/badge/Polyhack-v3.0-blue?style=for-the-badge)
 
