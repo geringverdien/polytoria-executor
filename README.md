@@ -9,6 +9,13 @@
 
 # [Download HERE](#download)
 
+# 🔥 **New: PolyLauncher** 🔥
+**Check out [PolyLauncher](https://github.com/ElCapor/PolyLauncher), our custom launcher that automatically manages the executor and HWID spoofer!**
+
+ <a href = "https://github.com/ElCapor/PolyLauncher">
+  <img src ="https://github.com/ElCapor/PolyLauncher/blob/main/.github/polylauncher.png" width=250>
+</a>
+
 **A Modern Script Executor for Polytoria**
 
 [Demo](#demo) • [Features](#features) • [Download](#Download) • [Community](#community) • [Architecture](#architecture) • [Source Tree](#source-tree) • [Building](#building) • [Why v3](#why-v3)
@@ -16,7 +23,7 @@
 </div>
 
 ---
-*New* : Added HWID Spoofer => Copy "version.dll" from .download to your game repository !
+*New* : Added HWID Spoofer => Copy "version.dll" from .download to your game repository or use **PolyLauncher** !
 
 ---
 
