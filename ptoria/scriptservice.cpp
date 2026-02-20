@@ -6,6 +6,7 @@
 #include <ptoria/player.h>
 #include <ptoria/tool.h>
 #include <ptoria/chatservice.h>
+#include <ptoria/playerdefaults.h>
 #include <ptoria/mousefunctions.h>
 #include <ptoria/drawinglib.h>
 #include <ptoria/http.h>
@@ -160,6 +161,7 @@ DynValue *loadstring(void *, ScriptExecutionContext *ctx, CallbackArguments *arg
     return script->loadstring(code, script->Globals(), UnityString::New("LoadString"));
 }
 
+///< TODO: Refactor to only take Player as argument and get PlayerDefaults automatically. 
 DynValue *serverequiptool(void *, ScriptExecutionContext *, CallbackArguments *args)
 {
     int count = args->Count();
@@ -252,6 +254,42 @@ DynValue *fireclickdetector(void *, ScriptExecutionContext *ctx, CallbackArgumen
     return DynValue::FromNil();
 }
 
+DynValue *loaddefaults(void *, ScriptExecutionContext *ctx, CallbackArguments *args)
+{
+     int count = args->Count();
+    if (count < 2)
+    {
+        return DynValue::FromString("Not enough arguments passed to loaddefaults");
+    }
+
+    DynValue *playerdefaults = args->RawGet(0, false);
+    if (playerdefaults == nullptr || playerdefaults->Type() != DynValue::DataType::UserData)
+    {
+        return DynValue::FromString("Invalid argument, expected PlayerDefaults");
+    }
+
+    DynValue *player = args->RawGet(1, false);
+    if (player == nullptr || player->Type() != DynValue::DataType::UserData)
+    {
+        return DynValue::FromString("Invalid argument, expected Player");
+    }
+
+    Player *playerobj = (Player *)(player->Cast(StaticClass<Player>()->GetType()));
+    if (playerobj == nullptr)
+    {
+        return DynValue::FromString("Failed to cast Player");
+    }
+
+    PlayerDefaults *playerdefaultsobj = (PlayerDefaults *)(playerdefaults->Cast(StaticClass<PlayerDefaults>()->GetType()));
+    if (playerdefaultsobj == nullptr)
+    {
+        return DynValue::FromString("Failed to cast PlayerDefaults");
+    }
+
+    playerdefaultsobj->CmdLoadDefaults(playerobj);
+    return DynValue::FromNil();
+}
+
 DynValue *identifyexecutor(void *, ScriptExecutionContext *ctx, CallbackArguments *args)
 {
     // elcapor compatible executor
@@ -269,6 +307,7 @@ void InstallEnvironnement(Script *script)
     RegisterCallback(script->Globals(), "sendchat", sendchat);
     RegisterCallback(script->Globals(), "fireclickdetector", fireclickdetector);
     RegisterCallback(script->Globals(), "identifyexecutor", identifyexecutor);
+    RegisterCallback(script->Globals(), "loaddefaults", loaddefaults);
 
     // Mouse control functions
     RegisterCallback(script->Globals(), "mouse_move", mouse_move);
