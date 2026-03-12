@@ -78,7 +78,7 @@ void spoofer::main_thread()
 // +--------------------------------------------------------+
 // |                       ADDRESSES                        |
 // +--------------------------------------------------------+
-constexpr std::uintptr_t GetDeviceUniqueID_Addr = 0x1A56880;
+constexpr std::uintptr_t GetDeviceUniqueID_Addr = 0x1A67F90;
 // it takes a MethodInfo* ptr, but because of stdcall, it's in a register, so we can ignore it
 using GetDeviceUniqueID_t = UnityString*(*)();
 
